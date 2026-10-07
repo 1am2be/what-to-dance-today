@@ -1,0 +1,55 @@
+@use "./tokens.scss";
+
+page {
+  min-height: 100%;
+  background: #eef2f4;
+  color: var(--color-ink);
+  font-family: Inter, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+view,
+text,
+button,
+image {
+  box-sizing: border-box;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  background: transparent;
+  border: 0;
+}
+
+button::after {
+  border: 0;
+}
+
+.mobile-page {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.page-content {
+  padding: calc(26px + env(safe-area-inset-top)) var(--page-gutter)
+    calc(110px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 430px) {
+  .mobile-page {
+    min-height: 844px;
+    margin: 18px auto;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: 36px;
+    box-shadow: 0 18px 60px rgba(56, 75, 92, 0.12);
+  }
+}

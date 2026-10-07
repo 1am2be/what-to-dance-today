@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.hbuilderx/
+.idea/
+.DS_Store
+*.log
+V1/
+figma-idol-dance-state.json

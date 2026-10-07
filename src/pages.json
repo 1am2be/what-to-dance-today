@@ -1,0 +1,25 @@
+{
+  "pages": [
+    {
+      "path": "pages/library/index",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#DDF9F3"
+      }
+    },
+    {
+      "path": "pages/practice-history/index",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#FDE6F3"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "Idol Dance",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#EEF2F4"
+  }
+}

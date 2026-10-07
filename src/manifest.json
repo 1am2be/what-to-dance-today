@@ -1,0 +1,29 @@
+{
+  "name": "Idol Dance",
+  "appid": "",
+  "description": "A personal K-pop dance library and practice tracker.",
+  "versionName": "0.1.0",
+  "versionCode": "10",
+  "transformPx": false,
+  "h5": {
+    "router": {
+      "mode": "hash"
+    }
+  },
+  "mp-xhs": {
+    "appid": "",
+    "projectname": "idol-dance",
+    "description": "Idol Dance",
+    "compileType": "miniprogram",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true
+    },
+    "usingComponents": true
+  },
+  "uniStatistics": {
+    "enable": false
+  },
+  "vueVersion": "3"
+}
