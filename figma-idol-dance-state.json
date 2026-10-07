@@ -1,0 +1,39 @@
+{
+  "runId": "idol-dance-ui-2026-10-06",
+  "scope": "lightweight-full-design-system-and-five-mobile-states",
+  "fileKey": "RO5Rawpsy904enQeKmKVD5",
+  "fileUrl": "https://www.figma.com/design/RO5Rawpsy904enQeKmKVD5",
+  "step": "complete",
+  "entities": {
+    "collections": {
+      "primitives": "VariableCollectionId:3:2",
+      "color": "VariableCollectionId:3:3",
+      "dimension": "VariableCollectionId:3:4"
+    },
+    "variables": {},
+    "pages": {
+      "uiKit": "0:1"
+    },
+    "components": {
+      "tag": "5:8",
+      "button": "5:21",
+      "avatar": "5:30",
+      "input": "5:47",
+      "tabs": "5:58",
+      "bottomNav": "5:79",
+      "artistCard": "5:112",
+      "songRow": "5:129",
+      "recordRow": "5:144"
+    },
+    "screens": {
+      "board": "6:6",
+      "home": "6:10",
+      "artistDetail": "6:69",
+      "history": "6:127",
+      "addDanceSheet": "6:190",
+      "todayPracticeSheet": "6:228"
+    }
+  },
+  "pendingValidations": [],
+  "completedSteps": ["file-created", "discovery", "foundations-created", "components-created", "screens-created", "structural-validation", "visual-validation"]
+}
