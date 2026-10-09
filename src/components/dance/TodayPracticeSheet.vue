@@ -133,7 +133,7 @@ const review = (dance: Dance, random: boolean) => {
 .dance-row__content { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
 .dance-row__title { overflow: hidden; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .dance-row__meta { overflow: hidden; color: var(--color-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.dance-row__action { flex: 0 0 78px; height: 30px; margin-left: 8px; font-size: 13px; border-radius: 999px; }
+.dance-row__action { display: flex; align-items: center; justify-content: center; flex: 0 0 78px; height: 30px; margin-left: 8px; padding: 0 10px; font-size: 13px; line-height: 1; border-radius: 999px; }
 .dance-row__action--pink { color: var(--color-pink-strong); background: #ffe5f2; }
 .dance-row__action--green { color: var(--color-green); background: #dcfaf3; }
 .empty-copy { display: flex; flex-direction: column; gap: 4px; padding: 14px; color: var(--color-muted); font-size: 13px; background: #f7f9fa; border-radius: 14px; }

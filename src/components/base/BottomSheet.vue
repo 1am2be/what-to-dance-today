@@ -1,13 +1,22 @@
 <script setup lang="ts">
-defineProps<{ open: boolean }>();
+withDefaults(defineProps<{
+  open: boolean;
+  placement?: "bottom" | "center";
+}>(), {
+  placement: "bottom",
+});
 defineEmits<{ close: [] }>();
 </script>
 
 <template>
-  <view v-if="open" class="sheet-layer">
+  <view
+    v-if="open"
+    class="sheet-layer"
+    :class="{ 'sheet-layer--center': placement === 'center' }"
+  >
     <button class="sheet-layer__backdrop" aria-label="关闭" @tap="$emit('close')" />
-    <view class="sheet" @tap.stop>
-      <view class="sheet__handle" />
+    <view class="sheet" :class="{ 'sheet--center': placement === 'center' }" @tap.stop>
+      <view v-if="placement === 'bottom'" class="sheet__handle" />
       <slot />
     </view>
   </view>
@@ -31,11 +40,15 @@ defineEmits<{ close: [] }>();
   background: rgba(28, 38, 48, 0.23);
 }
 
+.sheet-layer--center {
+  align-items: center;
+}
+
 .sheet {
   position: relative;
   width: 100%;
-  max-width: 390px;
   max-height: 92vh;
+  max-height: 92dvh;
   padding: 14px 24px calc(28px + env(safe-area-inset-bottom));
   overflow-y: auto;
   background: #ffffff;
@@ -51,10 +64,27 @@ defineEmits<{ close: [] }>();
   border-radius: 99px;
 }
 
-@media (min-width: 430px) {
+.sheet.sheet--center {
+  width: 100%;
+  max-width: 422px;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding: 28px 16px;
+  overflow-y: auto;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 768px) {
   .sheet {
+    max-width: 390px;
     margin-bottom: 18px;
     border-radius: 30px;
+  }
+
+  .sheet.sheet--center {
+    margin-bottom: 0;
+    border-radius: 0;
   }
 }
 </style>

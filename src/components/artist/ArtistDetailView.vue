@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import ImageCropSheet from "@/components/base/ImageCropSheet.vue";
 import DanceListItem from "@/components/dance/DanceListItem.vue";
 import type { ArtistSummary } from "@/domain/models/artist";
 import { useAppStore } from "@/stores/app";
@@ -7,11 +8,43 @@ import { useAppStore } from "@/stores/app";
 const props = defineProps<{ artist: ArtistSummary; focusDanceId?: string }>();
 const emit = defineEmits<{ back: []; deleted: [] }>();
 const store = useAppStore();
+const menuOpen = ref(false);
+const cropOpen = ref(false);
+const cropSource = ref("");
 
 const artistDances = computed(() => store.dances.filter((dance) => dance.artistId === props.artist.id));
 const practiceCount = computed(() => store.practiceRecords.filter((record) => record.artistId === props.artist.id).length);
 
+const chooseArtistImage = () => {
+  menuOpen.value = false;
+  uni.chooseImage({
+    count: 1,
+    sizeType: ["original"],
+    sourceType: ["album", "camera"],
+    success: (result) => {
+      const paths = Array.isArray(result.tempFilePaths) ? result.tempFilePaths : [result.tempFilePaths];
+      const path = paths[0];
+      if (!path) return;
+      cropSource.value = path;
+      cropOpen.value = true;
+    },
+  });
+};
+
+const replaceCropImage = () => {
+  cropOpen.value = false;
+  chooseArtistImage();
+};
+
+const applyCroppedImage = (imageUrl: string) => {
+  if (!store.updateArtistImage(props.artist.id, imageUrl)) return;
+  cropOpen.value = false;
+  cropSource.value = "";
+  uni.showToast({ title: "头像已更换", icon: "none" });
+};
+
 const confirmDeleteArtist = () => {
+  menuOpen.value = false;
   uni.showModal({
     title: `删除 ${props.artist.name}？`,
     content: "删除了就找不回来了哦~",
@@ -31,7 +64,19 @@ const confirmDeleteArtist = () => {
   <view class="artist-detail">
     <view class="artist-detail__topbar">
       <button class="round-button" aria-label="返回" @tap="$emit('back')">‹</button>
-      <button class="round-button round-button--delete" aria-label="删除 Artist" @tap="confirmDeleteArtist">...</button>
+      <view class="artist-actions">
+        <button
+          class="round-button round-button--more"
+          aria-label="更多操作"
+          :aria-expanded="menuOpen"
+          @tap.stop="menuOpen = !menuOpen"
+        >...</button>
+        <view v-if="menuOpen" class="artist-actions__menu">
+          <button class="artist-actions__item" @tap.stop="chooseArtistImage">更换头像</button>
+          <button class="artist-actions__item artist-actions__item--danger" @tap.stop="confirmDeleteArtist">删除专辑</button>
+        </view>
+      </view>
+      <view v-if="menuOpen" class="artist-actions__backdrop" @tap="menuOpen = false" />
     </view>
 
     <view class="artist-hero">
@@ -58,14 +103,29 @@ const confirmDeleteArtist = () => {
         />
       </view>
     </view>
+
+    <ImageCropSheet
+      :open="cropOpen"
+      :source="cropSource"
+      @close="cropOpen = false"
+      @replace="replaceCropImage"
+      @confirm="applyCroppedImage"
+    />
   </view>
 </template>
 
 <style scoped lang="scss">
 .artist-detail { padding: calc(24px + env(safe-area-inset-top)) var(--page-gutter) calc(110px + env(safe-area-inset-bottom)); }
-.artist-detail__topbar { display: flex; align-items: center; justify-content: space-between; margin-right: -8px; margin-left: -8px; }
-.round-button { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; margin: 0; font-size: 34px; font-weight: 300; line-height: 1; background: #fff; border-radius: 50%; }
-.round-button--delete { padding-bottom: 8px; color: var(--color-muted); font-size: 18px; font-weight: 700; letter-spacing: 2px; }
+.artist-detail__topbar { position: relative; z-index: 20; display: flex; align-items: center; justify-content: space-between; margin-right: -8px; margin-left: -8px; }
+.round-button { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; margin: 0; padding: 0; font-size: 34px; font-weight: 300; line-height: 1; background: #fff; border: 0; border-radius: 50%; }
+.round-button::after { border: 0; }
+.round-button--more { padding-bottom: 8px; color: var(--color-muted); font-size: 18px; font-weight: 700; letter-spacing: 2px; }
+.artist-actions { position: relative; z-index: 2; }
+.artist-actions__backdrop { position: fixed; z-index: 1; inset: 0; }
+.artist-actions__menu { position: absolute; top: 50px; right: 0; display: flex; width: 132px; flex-direction: column; gap: 3px; padding: 6px; background: rgba(255, 255, 255, 0.98); border: 1px solid rgba(204, 214, 224, 0.92); border-radius: 16px; box-shadow: 0 12px 30px rgba(75, 94, 112, 0.18); }
+.artist-actions__item { display: flex; align-items: center; justify-content: center; width: 100%; height: 40px; margin: 0; padding: 0 12px; color: var(--color-ink); font-size: 14px; font-weight: 650; line-height: 1; background: #f5fbfc; border: 0; border-radius: 11px; }
+.artist-actions__item::after { border: 0; }
+.artist-actions__item--danger { color: var(--color-pink-strong); background: #fff1f7; }
 .artist-hero { position: relative; display: flex; align-items: center; gap: 14px; min-height: 190px; margin-top: 16px; padding: 22px 18px; overflow: hidden; color: #fff; background: #f58bc3; border-radius: 24px; }
 .artist-hero__art { position: relative; flex: 0 0 122px; width: 122px; height: 122px; overflow: hidden; isolation: isolate; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); transform: translateZ(0); backface-visibility: hidden; }
 .artist-hero__art--aqua { background: radial-gradient(circle at 70% 70%, #ecfaff 0, #afe6f3 48%, #f4e6f5 100%); }

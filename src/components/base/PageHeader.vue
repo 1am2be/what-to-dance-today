@@ -8,10 +8,16 @@ defineProps<{
 
 <template>
   <view class="page-header">
-    <text class="page-header__eyebrow" :class="`page-header__eyebrow--${accent ?? 'aqua'}`">
-      {{ eyebrow }}
-    </text>
-    <text class="page-header__title">{{ title }}</text>
+    <view class="page-header__eyebrow-row">
+      <text class="page-header__eyebrow" :class="`page-header__eyebrow--${accent ?? 'aqua'}`">
+        {{ eyebrow }}
+      </text>
+      <slot name="eyebrow-action" />
+    </view>
+    <view class="page-header__title-row">
+      <text class="page-header__title">{{ title }}</text>
+      <slot name="title-action" />
+    </view>
     <text class="page-header__sparkle" aria-hidden="true">✦</text>
   </view>
 </template>
@@ -31,12 +37,26 @@ defineProps<{
   text-transform: uppercase;
 }
 
+.page-header__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
 .page-header__eyebrow--aqua {
   color: var(--color-aqua-strong);
 }
 
 .page-header__eyebrow--blue {
   color: var(--color-blue);
+}
+
+.page-header__title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
 }
 
 .page-header__title {

@@ -1,15 +1,14 @@
-const CACHE_NAME = "idol-dance-v1";
-
-const appShellUrls = () => {
-  const scope = new URL(self.registration.scope).pathname;
-  return [scope, `${scope}index.html`, `${scope}manifest.webmanifest`];
-};
+const CACHE_NAME = "idol-dance-__BUILD_VERSION__";
+const PRECACHE_MANIFEST = "precache-manifest.json";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(appShellUrls()))
+    fetch(new URL(PRECACHE_MANIFEST, self.registration.scope), { cache: "no-store" })
+      .then((response) => response.json())
+      .then(({ files }) => {
+        const urls = [PRECACHE_MANIFEST, ...files].map((file) => new URL(file, self.registration.scope).toString());
+        return caches.open(CACHE_NAME).then((cache) => cache.addAll(urls));
+      })
       .then(() => self.skipWaiting()),
   );
 });
@@ -38,7 +37,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(`${new URL(self.registration.scope).pathname}index.html`)),
+        .catch(() => caches.match(new URL("index.html", self.registration.scope).toString())),
     );
     return;
   }

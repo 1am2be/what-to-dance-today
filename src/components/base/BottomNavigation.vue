@@ -43,16 +43,20 @@ const navigate = (target: TabName) => {
 .bottom-nav {
   position: fixed;
   z-index: 20;
-  right: max(16px, calc((100vw - 390px) / 2 + 16px));
-  bottom: calc(14px + env(safe-area-inset-bottom));
-  left: max(16px, calc((100vw - 390px) / 2 + 16px));
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  height: var(--nav-height);
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid var(--color-line);
-  border-radius: 22px;
+  width: 100%;
+  min-height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+  padding: 8px max(var(--page-gutter), env(safe-area-inset-right))
+    calc(8px + env(safe-area-inset-bottom))
+    max(var(--page-gutter), env(safe-area-inset-left));
+  background: #ffffff;
+  border-top: 1px solid var(--color-line);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -8px 24px rgba(56, 75, 92, 0.06);
 }
 
 .bottom-nav__item {
@@ -62,7 +66,7 @@ const navigate = (target: TabName) => {
   justify-content: center;
   gap: 4px;
   width: 100%;
-  height: 100%;
+  height: calc(var(--nav-height) - 16px);
   min-width: 0;
   color: var(--color-muted);
   line-height: 1.2;
@@ -129,5 +133,19 @@ const navigate = (target: TabName) => {
 
 .bottom-nav__calendar-rings::after {
   right: 3px;
+}
+
+@media (min-width: 768px) {
+  .bottom-nav {
+    right: auto;
+    bottom: 18px;
+    left: 50%;
+    width: calc(390px - 32px);
+    min-height: var(--nav-height);
+    padding: 8px;
+    border: 1px solid var(--color-line);
+    border-radius: 22px;
+    transform: translateX(-50%);
+  }
 }
 </style>

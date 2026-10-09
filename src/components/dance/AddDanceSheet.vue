@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import BottomSheet from "@/components/base/BottomSheet.vue";
+import ImageCropSheet from "@/components/base/ImageCropSheet.vue";
 import type { Artist } from "@/domain/models/artist";
 import type { DanceSource, ScopeType } from "@/domain/models/dance";
 import { DanceValidationError, useAppStore } from "@/stores/app";
@@ -17,6 +18,8 @@ const todayText = () => {
 const sourceType = ref<DanceSource>("new");
 const useNewArtist = ref(false);
 const error = ref("");
+const cropOpen = ref(false);
+const cropSource = ref("");
 const form = reactive({
   artistId: "",
   artistName: "",
@@ -48,6 +51,8 @@ const reset = () => {
   form.scopeType = "chorus";
   form.customScope = "";
   form.learnedDate = todayText();
+  cropOpen.value = false;
+  cropSource.value = "";
 };
 
 watch(() => props.open, (open) => {
@@ -61,36 +66,28 @@ const selectArtist = (event: { detail: { value: number } }) => {
 const chooseImage = () => {
   uni.chooseImage({
     count: 1,
-    crop: {
-      width: 600,
-      height: 600,
-      quality: 85,
-      resize: true,
-    },
-    success: async (result) => {
+    sizeType: ["original"],
+    sourceType: ["album", "camera"],
+    success: (result) => {
       const paths = Array.isArray(result.tempFilePaths) ? result.tempFilePaths : [result.tempFilePaths];
       const path = paths[0];
       if (!path) return;
-      // H5 使用 data URL，刷新页面后图片仍可从本地存储恢复。
-      // #ifdef H5
-      const blob = await fetch(path).then((response) => response.blob());
-      form.artistImageUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      // #endif
-      // #ifndef H5
-      uni.saveFile({
-        tempFilePath: path,
-        success: (saved) => { form.artistImageUrl = saved.savedFilePath; },
-        fail: () => { form.artistImageUrl = path; },
-      });
-      // #endif
-      error.value = "";
+      cropSource.value = path;
+      cropOpen.value = true;
     },
   });
+};
+
+const replaceCropImage = () => {
+  cropOpen.value = false;
+  chooseImage();
+};
+
+const applyCroppedImage = (imageUrl: string) => {
+  form.artistImageUrl = imageUrl;
+  cropOpen.value = false;
+  cropSource.value = "";
+  error.value = "";
 };
 
 const messageFor = (validationError: DanceValidationError) => ({
@@ -130,8 +127,9 @@ const submit = () => {
 </script>
 
 <template>
-  <BottomSheet :open="open" @close="$emit('close')">
-    <view class="add-sheet">
+  <view>
+    <BottomSheet :open="open" @close="$emit('close')">
+      <view class="add-sheet">
       <text class="sheet-title">添加舞蹈</text>
 
       <view class="tabs">
@@ -189,8 +187,16 @@ const submit = () => {
 
       <text v-if="error" class="form-error">{{ error }}</text>
       <button class="primary-button" @tap="submit">＋ {{ sourceType === "new" ? "记录学习" : "加入我的舞单" }}</button>
-    </view>
-  </BottomSheet>
+      </view>
+    </BottomSheet>
+    <ImageCropSheet
+      :open="cropOpen"
+      :source="cropSource"
+      @close="cropOpen = false"
+      @replace="replaceCropImage"
+      @confirm="applyCroppedImage"
+    />
+  </view>
 </template>
 
 <style scoped lang="scss">

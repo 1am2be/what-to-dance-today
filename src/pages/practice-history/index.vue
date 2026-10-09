@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import BottomNavigation from "@/components/base/BottomNavigation.vue";
 import PageHeader from "@/components/base/PageHeader.vue";
 import PracticeRecordCard from "@/components/practice/PracticeRecordCard.vue";
@@ -31,6 +31,18 @@ const monthNames = [
 const store = useAppStore();
 onMounted(store.initialize);
 
+const toDateKey = (date: Date) => {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+const parseDateKey = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12);
+};
+const selectedDate = ref(toDateKey(new Date()));
+const todayDate = toDateKey(new Date());
+
 const openDance = (danceId: string) => {
   const dance = store.dances.find((item) => item.id === danceId);
   if (!dance) return;
@@ -45,22 +57,24 @@ const toLocalDateKey = (value: string) => {
 };
 
 const currentMonthLabel = computed(() => {
-  const now = new Date();
+  const selected = parseDateKey(selectedDate.value);
   const count = store.practiceRecordViews.length;
-  return `${monthNames[now.getMonth()]} · ${String(count).padStart(2, "0")} SESSIONS`;
+  return `${monthNames[selected.getMonth()]} · ${String(count).padStart(2, "0")} SESSIONS`;
 });
 
 const groups = computed<RecordGroup[]>(() => {
   const now = new Date();
-  const todayKey = toLocalDateKey(now.toISOString());
+  const todayKey = toDateKey(now);
   const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-  const yesterdayKey = toLocalDateKey(yesterday.toISOString());
+  const yesterdayKey = toDateKey(yesterday);
   const grouped = new Map<string, PracticeRecordView[]>();
 
-  store.practiceRecordViews.forEach((record) => {
-    const key = toLocalDateKey(record.practicedAt);
-    grouped.set(key, [...(grouped.get(key) ?? []), record]);
-  });
+  store.practiceRecordViews
+    .filter((record) => toLocalDateKey(record.practicedAt) === selectedDate.value)
+    .forEach((record) => {
+      const key = toLocalDateKey(record.practicedAt);
+      grouped.set(key, [...(grouped.get(key) ?? []), record]);
+    });
 
   return [...grouped.entries()]
     .sort(([left], [right]) => right.localeCompare(left))
@@ -74,15 +88,36 @@ const groups = computed<RecordGroup[]>(() => {
       };
     });
 });
+
+const selectDate = (value: string) => {
+  if (value > todayDate) return;
+  selectedDate.value = value;
+};
+
+const selectDateFromPicker = (event: { detail: { value: string } }) => {
+  selectDate(event.detail.value);
+};
 </script>
 
 <template>
   <view class="mobile-page history-page">
     <view class="page-content">
-      <PageHeader :eyebrow="currentMonthLabel" title="练舞记录" />
+      <PageHeader :eyebrow="currentMonthLabel" title="练舞记录">
+        <template #title-action>
+          <picker
+            class="history-date-picker"
+            mode="date"
+            :value="selectedDate"
+            :end="todayDate"
+            @change="selectDateFromPicker"
+          >
+            <text class="history-date-trigger">选择日期</text>
+          </picker>
+        </template>
+      </PageHeader>
 
       <view class="history-week">
-        <WeekStrip />
+        <WeekStrip :selected-date="selectedDate" @select="selectDate" />
       </view>
 
       <view class="history-groups">
@@ -96,6 +131,10 @@ const groups = computed<RecordGroup[]>(() => {
               @select="openDance"
             />
           </view>
+        </view>
+        <view v-if="!groups.length" class="history-empty">
+          <text>这一天还没有练舞记录</text>
+          <text>跳一支喜欢的舞吧 ✦</text>
         </view>
       </view>
     </view>
@@ -111,6 +150,21 @@ const groups = computed<RecordGroup[]>(() => {
 
 .history-week {
   margin-top: 30px;
+}
+
+.history-date-picker {
+  flex: 0 0 auto;
+}
+
+.history-date-trigger {
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0.4px;
+  text-shadow:
+    0 1px 0 rgba(219, 82, 139, 0.62),
+    0 2px 5px rgba(219, 82, 139, 0.22);
 }
 
 .history-groups {
@@ -135,5 +189,23 @@ const groups = computed<RecordGroup[]>(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 42px 18px;
+  color: var(--color-muted);
+  font-size: 13px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.62);
+  border-radius: 20px;
+}
+
+.history-empty text:first-child {
+  color: var(--color-ink);
+  font-weight: 650;
 }
 </style>

@@ -5,6 +5,7 @@
   "packageManager": "pnpm@11.25.0",
   "scripts": {
     "dev:h5": "uni",
+    "preview:local": "node scripts/open-local-preview.mjs",
     "dev:mp-xhs": "uni -p mp-xhs",
     "build:h5": "uni build && node scripts/copy-pwa.mjs",
     "build:mp-xhs": "uni build -p mp-xhs",

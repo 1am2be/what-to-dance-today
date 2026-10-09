@@ -7,12 +7,14 @@ import BottomNavigation from "@/components/base/BottomNavigation.vue";
 import PageHeader from "@/components/base/PageHeader.vue";
 import AddDanceSheet from "@/components/dance/AddDanceSheet.vue";
 import TodayPracticeSheet from "@/components/dance/TodayPracticeSheet.vue";
+import UsageGuideSheet from "@/components/dance/UsageGuideSheet.vue";
 import type { ArtistSummary } from "@/domain/models/artist";
 import { useAppStore } from "@/stores/app";
 
 const store = useAppStore();
 const addSheetOpen = ref(false);
 const practiceSheetOpen = ref(false);
+const usageGuideOpen = ref(false);
 const selectedArtistId = ref("");
 const focusDanceId = ref("");
 const totalDances = computed(() => store.dances.length);
@@ -42,7 +44,11 @@ const openArtist = (artist: ArtistSummary) => {
     />
 
     <view v-else class="page-content">
-      <PageHeader :eyebrow="`IDOL DANCE · ${totalDances} DANCE`" title="我的舞单" />
+      <PageHeader :eyebrow="`IDOL DANCE · ${totalDances} DANCE`" title="我的舞单">
+        <template #title-action>
+          <button class="usage-guide-trigger" @tap="usageGuideOpen = true">使用说明</button>
+        </template>
+      </PageHeader>
 
       <view class="library-actions">
         <button class="library-actions__button library-actions__button--review" @tap="practiceSheetOpen = true">
@@ -68,6 +74,7 @@ const openArtist = (artist: ArtistSummary) => {
     <BottomNavigation active="library" />
     <AddDanceSheet :open="addSheetOpen" @close="addSheetOpen = false" />
     <TodayPracticeSheet :open="practiceSheetOpen" @close="practiceSheetOpen = false" />
+    <UsageGuideSheet :open="usageGuideOpen" @close="usageGuideOpen = false" />
   </view>
 </template>
 
@@ -88,6 +95,44 @@ const openArtist = (artist: ArtistSummary) => {
   font-size: 58px;
   line-height: 1;
   content: "✦";
+}
+
+.usage-guide-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: auto;
+  margin: 0;
+  padding: 0 2px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0.4px;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow:
+    0 1px 0 rgba(18, 141, 161, 0.7),
+    0 2px 4px rgba(18, 141, 161, 0.32);
+  -webkit-text-stroke: 0.25px rgba(18, 141, 161, 0.48);
+}
+
+.usage-guide-trigger::before {
+  position: absolute;
+  top: 1px;
+  right: -8px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 7px;
+  line-height: 1;
+  content: "✦";
+}
+
+.usage-guide-trigger::after {
+  content: none;
 }
 
 .library-actions {

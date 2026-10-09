@@ -332,6 +332,15 @@ export const useAppStore = defineStore("app", () => {
     return true;
   };
 
+  const updateArtistImage = (artistId: string, imageUrl: string) => {
+    const artist = artists.value.find((item) => item.id === artistId);
+    if (!artist || !imageUrl) return false;
+    artist.imageUrl = imageUrl;
+    artist.updatedAt = new Date().toISOString();
+    persist();
+    return true;
+  };
+
   return {
     artists,
     dances,
@@ -344,6 +353,7 @@ export const useAppStore = defineStore("app", () => {
     addDance,
     recordReview,
     updateDanceScope,
+    updateArtistImage,
     deleteDance,
     deleteArtist,
   };
