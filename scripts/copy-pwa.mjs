@@ -27,7 +27,10 @@ const walkFiles = (directory) => readdirSync(directory, { withFileTypes: true })
 const serviceWorkerPath = join(destination, "sw.js");
 const manifestPath = join(destination, "precache-manifest.json");
 const files = walkFiles(destination)
-  .filter((file) => file !== serviceWorkerPath && file !== manifestPath)
+  .filter((file) => {
+    const fileName = relative(destination, file).replaceAll("\\", "/");
+    return file !== serviceWorkerPath && file !== manifestPath && fileName !== ".nojekyll";
+  })
   .map((file) => relative(destination, file).replaceAll("\\", "/"))
   .sort();
 
