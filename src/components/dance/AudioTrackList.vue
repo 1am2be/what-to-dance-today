@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from "vue";
 import { AudioStorageError, useAppStore } from "@/stores/app-v2";
+import Mp3UploadButton from "@/components/dance/Mp3UploadButton";
 
 const props = defineProps<{ danceId: string }>();
 const store = useAppStore();
-const fileInput = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const playingId = ref("");
 const editingId = ref("");
@@ -22,19 +22,19 @@ const formatDuration = (seconds: number | null) => {
   return `${minute}:${second}`;
 };
 
-const chooseFiles = () => {
-  // #ifdef H5
-  fileInput.value?.click();
-  // #endif
-  // #ifndef H5
-  uni.showToast({ title: "当前版本请在手机网页中上传 MP3", icon: "none" });
-  // #endif
-};
-
 const readDuration = (file: File) => new Promise<number | null>((resolve) => {
   const url = URL.createObjectURL(file);
   const element = new Audio();
+  let finished = false;
+  const timeout = setTimeout(() => finish(null), 8000);
   const finish = (value: number | null) => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timeout);
+    element.onloadedmetadata = null;
+    element.onerror = null;
+    element.removeAttribute("src");
+    element.load();
     URL.revokeObjectURL(url);
     resolve(value);
   };
@@ -49,7 +49,7 @@ const uploadFiles = async (event: Event) => {
   const files = Array.from(target.files ?? []);
   target.value = "";
   if (!files.length) return;
-  if (files.some((file) => file.type && file.type !== "audio/mpeg" && !file.name.toLowerCase().endsWith(".mp3"))) {
+  if (files.some((file) => file.type !== "audio/mpeg" && !file.name.toLowerCase().endsWith(".mp3"))) {
     uni.showToast({ title: "仅支持 MP3 文件", icon: "none" });
     return;
   }
@@ -140,17 +140,12 @@ onBeforeUnmount(stop);
         <text>练舞音乐</text>
         <text>MP3 · 单文件最大 100MB</text>
       </view>
-      <button :disabled="loading" aria-label="上传 MP3" @tap="chooseFiles">{{ loading ? "…" : "＋" }}</button>
     </view>
-
-    <!-- #ifdef H5 -->
-    <input ref="fileInput" class="audio-tracks__file" type="file" accept=".mp3,audio/mpeg" multiple @change="uploadFiles" />
-    <!-- #endif -->
 
     <view v-if="tracks.length" class="audio-tracks__list">
       <view v-for="track in tracks" :key="track.id" class="audio-row">
         <button class="audio-row__play" :aria-label="playingId === track.id ? '暂停' : '播放'" @tap="togglePlay(track.id, track.assetId)">
-          {{ playingId === track.id ? "■" : "▶" }}
+          <view class="audio-icon" :class="playingId === track.id ? 'audio-icon--pause' : 'audio-icon--play'" aria-hidden="true"><view v-if="playingId === track.id" /><view v-if="playingId === track.id" /></view>
         </button>
         <view v-if="editingId === track.id" class="audio-row__edit">
           <input v-model="editingName" maxlength="60" @confirm="saveRename" />
@@ -160,11 +155,16 @@ onBeforeUnmount(stop);
           <text>{{ track.displayName }}</text>
           <text>{{ formatDuration(track.duration) }}{{ track.duration ? " · " : "" }}{{ formatSize(track.fileSize) }}</text>
         </view>
-        <button class="audio-row__icon" aria-label="修改音乐名称" @tap="startRename(track.id, track.displayName)">✎</button>
-        <button class="audio-row__icon" aria-label="删除音乐" @tap="remove(track.id, track.displayName)">⌫</button>
+        <button class="audio-row__icon" aria-label="修改音乐名称" @tap="startRename(track.id, track.displayName)"><view class="audio-icon audio-icon--edit" aria-hidden="true" /></button>
+        <button class="audio-row__icon" aria-label="删除音乐" @tap="remove(track.id, track.displayName)"><view class="audio-icon audio-icon--delete" aria-hidden="true"><view /><view /></view></button>
       </view>
     </view>
-    <button v-else class="audio-tracks__empty" @tap="chooseFiles">＋ 上传这支舞的 MP3</button>
+    <!-- #ifdef H5 -->
+    <Mp3UploadButton :disabled="loading" :has-tracks="Boolean(tracks.length)" @change="uploadFiles" />
+    <!-- #endif -->
+    <!-- #ifndef H5 -->
+    <text class="audio-tracks__empty">请在手机网页中上传 MP3</text>
+    <!-- #endif -->
   </view>
 </template>
 
@@ -174,16 +174,25 @@ onBeforeUnmount(stop);
 .audio-tracks__heading > view { display: flex; flex-direction: column; gap: 3px; }
 .audio-tracks__heading > view text:first-child { font-size: 13px; font-weight: 750; }
 .audio-tracks__heading > view text:last-child { color: var(--color-muted); font-size: 10px; }
-.audio-tracks__heading > button { display: grid; width: 32px; height: 32px; color: #fff; font-size: 20px; background: var(--glass-strong); border: 1px solid var(--color-line); place-items: center; }
-.audio-tracks__file { position: fixed; top: -10000px; left: -10000px; width: 1px; height: 1px; opacity: 0; }
 .audio-tracks__list { display: flex; flex-direction: column; gap: 6px; }
 .audio-row { display: flex; min-height: 48px; align-items: center; gap: 7px; padding: 6px 7px; background: var(--glass); border: 1px solid var(--color-line); }
-.audio-row__play { display: grid; flex: 0 0 32px; width: 32px; height: 32px; color: #fff; font-size: 11px; background: var(--glass-strong); border: 1px solid var(--color-line); place-items: center; }
+.audio-row__play { display: flex; flex: 0 0 32px; width: 32px; height: 32px; align-items: center; justify-content: center; padding: 0; line-height: 1; color: #fff; font-size: 11px; background: var(--glass-strong); border: 1px solid var(--color-line); }
 .audio-row__copy { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
 .audio-row__copy text:first-child { overflow: hidden; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .audio-row__copy text:last-child { color: var(--color-muted); font-size: 9px; }
 .audio-row__edit { display: flex; flex: 1; gap: 5px; min-width: 0; }
 .audio-row__edit input { flex: 1; height: 32px; padding: 0 8px; color: #fff; font-size: 11px; background: rgba(0, 0, 0, 0.18); border: 1px solid var(--color-line); }
-.audio-row__edit button, .audio-row__icon { display: grid; flex: 0 0 30px; width: 30px; height: 30px; color: #fff; font-size: 13px; background: transparent; border: 1px solid var(--color-line); place-items: center; }
+.audio-row__edit button, .audio-row__icon { display: flex; flex: 0 0 30px; width: 30px; height: 30px; align-items: center; justify-content: center; padding: 0; line-height: 1; color: #fff; font-size: 13px; background: transparent; border: 1px solid var(--color-line); }
+.audio-icon { position: relative; display: block; flex: 0 0 auto; pointer-events: none; }
+.audio-icon--play { width: 0; height: 0; margin-left: 2px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid #fff; }
+.audio-icon--pause { display: flex; width: 9px; height: 10px; justify-content: space-between; }
+.audio-icon--pause > view { width: 3px; height: 10px; background: #fff; }
+.audio-icon--edit { width: 12px; height: 5px; border: 1px solid #fff; transform: rotate(-45deg); }
+.audio-icon--edit::before { position: absolute; top: -1px; left: -4px; width: 0; height: 0; content: ''; border-top: 2.5px solid transparent; border-bottom: 2.5px solid transparent; border-right: 3px solid #fff; }
+.audio-icon--edit::after { position: absolute; top: 0; right: 2px; height: 3px; content: ''; border-left: 1px solid #fff; }
+.audio-icon--delete { width: 13px; height: 10px; border: 1px solid #fff; border-left: 0; }
+.audio-icon--delete::before { position: absolute; top: 0; left: -4px; width: 7px; height: 7px; content: ''; border-left: 1px solid #fff; border-bottom: 1px solid #fff; transform: rotate(45deg); }
+.audio-icon--delete > view { position: absolute; top: 3.5px; left: 4px; width: 6px; height: 1px; background: #fff; transform: rotate(45deg); }
+.audio-icon--delete > view:last-child { transform: rotate(-45deg); }
 .audio-tracks__empty { display: flex; height: 42px; align-items: center; justify-content: center; color: var(--color-muted); font-size: 11px; background: var(--glass); border: 1px dashed var(--color-line); }
 </style>

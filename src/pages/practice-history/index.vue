@@ -5,6 +5,7 @@ import BottomNavigation from "@/components/base/BottomNavigation.vue";
 import PageHeader from "@/components/base/PageHeader.vue";
 import PracticeRecordCard from "@/components/practice/PracticeRecordCard.vue";
 import WeekStrip from "@/components/practice/WeekStrip.vue";
+import DateCalendarSheet from "@/components/practice/DateCalendarSheet.vue";
 import type { PracticeRecordView } from "@/domain/models/practice-record";
 import { useAppStore } from "@/stores/app-v2";
 
@@ -42,6 +43,7 @@ const parseDateKey = (value: string) => {
   return new Date(year, month - 1, day, 12);
 };
 const selectedDate = ref(toDateKey(new Date()));
+const calendarOpen = ref(false);
 const todayDate = toDateKey(new Date());
 
 const openDance = (danceId: string) => {
@@ -95,9 +97,6 @@ const selectDate = (value: string) => {
   selectedDate.value = value;
 };
 
-const selectDateFromPicker = (event: { detail: { value: string } }) => {
-  selectDate(event.detail.value);
-};
 </script>
 
 <template>
@@ -110,15 +109,9 @@ const selectDateFromPicker = (event: { detail: { value: string } }) => {
     <view class="page-content">
       <PageHeader :eyebrow="currentMonthLabel" title="练舞记录">
         <template #title-action>
-          <picker
-            class="history-date-picker"
-            mode="date"
-            :value="selectedDate"
-            :end="todayDate"
-            @change="selectDateFromPicker"
-          >
+          <button class="history-date-picker" @tap="calendarOpen = true">
             <text class="history-date-trigger">选择日期</text>
-          </picker>
+          </button>
         </template>
       </PageHeader>
 
@@ -152,6 +145,7 @@ const selectDateFromPicker = (event: { detail: { value: string } }) => {
     </view>
 
     <BottomNavigation active="history" />
+    <DateCalendarSheet :open="calendarOpen" :selected-date="selectedDate" @select="selectDate" @close="calendarOpen = false" />
   </view>
 </template>
 

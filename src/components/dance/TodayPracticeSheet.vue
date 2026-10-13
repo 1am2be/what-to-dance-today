@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import BottomSheet from "@/components/base/BottomSheet.vue";
+import RandomDancePlayer from "@/components/dance/RandomDancePlayer.vue";
 import type { Dance } from "@/domain/models/dance";
 import { useAppStore } from "@/stores/app-v2";
 
@@ -63,7 +64,10 @@ const review = (dance: Dance, random: boolean) => {
 <template>
   <BottomSheet :open="open" @close="$emit('close')">
     <view class="practice-sheet">
-      <text class="sheet-title">今天复习什么</text>
+      <view class="practice-sheet__heading">
+        <text class="sheet-title">今天复习什么</text>
+        <RandomDancePlayer :open="open" />
+      </view>
 
       <template v-if="store.dances.length">
         <view class="section-heading section-heading--pink">
@@ -125,6 +129,7 @@ const review = (dance: Dance, random: boolean) => {
 <style scoped lang="scss">
 .practice-sheet { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
 .sheet-title { margin-bottom: 2px; font-size: 24px; font-weight: 800; }
+.practice-sheet__heading { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; }
 .section-heading button { display: flex; min-width: 62px; height: 28px; align-items: center; justify-content: center; padding: 0 10px; color: #fff; font-size: 11px; line-height: 1; letter-spacing: 0; background: var(--glass); border: 1px solid var(--color-line); }
 .section-heading--pink { color: #ffffff; }

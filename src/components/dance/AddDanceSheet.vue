@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from "vue";
 import BottomSheet from "@/components/base/BottomSheet.vue";
 import ImageCropSheet from "@/components/base/ImageCropSheet.vue";
+import Mp3UploadButton from "@/components/dance/Mp3UploadButton";
 import type { Artist } from "@/domain/models/artist";
 import type { DanceSource, ScopeType } from "@/domain/models/dance";
 import { AudioStorageError, DanceValidationError, MAX_AUDIO_FILE_SIZE, useAppStore } from "@/stores/app-v2";
@@ -20,7 +21,6 @@ const useNewArtist = ref(false);
 const error = ref("");
 const cropOpen = ref(false);
 const cropSource = ref("");
-const audioInput = ref<HTMLInputElement | null>(null);
 const stagedAudio = ref<File[]>([]);
 const form = reactive({
   artistId: "",
@@ -103,15 +103,6 @@ const messageFor = (validationError: DanceValidationError) => ({
   "duplicate-unchanged": "学习内容没有变化，未新增练习记录",
 }[validationError.code]);
 
-const chooseAudio = () => {
-  // #ifdef H5
-  audioInput.value?.click();
-  // #endif
-  // #ifndef H5
-  uni.showToast({ title: "当前版本请在手机网页中上传 MP3", icon: "none" });
-  // #endif
-};
-
 const selectAudio = (event: Event) => {
   const input = event.target as HTMLInputElement;
   const files = Array.from(input.files ?? []);
@@ -131,7 +122,16 @@ const selectAudio = (event: Event) => {
 const readDuration = (file: File) => new Promise<number | null>((resolve) => {
   const url = URL.createObjectURL(file);
   const element = new Audio();
+  let finished = false;
+  const timeout = setTimeout(() => finish(null), 8000);
   const finish = (duration: number | null) => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timeout);
+    element.onloadedmetadata = null;
+    element.onerror = null;
+    element.removeAttribute("src");
+    element.load();
     URL.revokeObjectURL(url);
     resolve(duration);
   };
@@ -230,13 +230,10 @@ const submit = async () => {
       <view class="field">
         <view class="field__heading">
           <text>Song Title</text>
-          <button class="field__switch" @tap="chooseAudio">
-            {{ stagedAudio.length ? `已选择 ${stagedAudio.length} 个音频` : "点击可上传音频" }}
-          </button>
+          <!-- #ifdef H5 -->
+          <Mp3UploadButton compact :label="stagedAudio.length ? `已选择 ${stagedAudio.length} 个音频` : '点击可上传音频'" @change="selectAudio" />
+          <!-- #endif -->
         </view>
-        <!-- #ifdef H5 -->
-        <input ref="audioInput" class="audio-file-input" type="file" accept=".mp3,audio/mpeg" multiple @change="selectAudio" />
-        <!-- #endif -->
         <input v-model="form.songTitle" class="input input--left" placeholder="输入歌名" />
       </view>
 
@@ -295,6 +292,5 @@ const submit = async () => {
 .scope-options button { display: flex; height: 38px; align-items: center; justify-content: center; padding: 0 8px; color: var(--color-muted); font-size: 12px; white-space: nowrap; background: var(--glass); border: 1px solid var(--color-line); }
 .scope-options .active { color: #fff; background: var(--glass-strong); }
 .form-error { color: var(--color-pink-strong); font-size: 13px; }
-.audio-file-input { position: fixed; top: -10000px; left: -10000px; width: 1px; height: 1px; opacity: 0; }
 .primary-button { display: flex; height: 52px; align-items: center; justify-content: center; padding: 0 20px; color: #ffffff; font-size: 17px; font-weight: 700; background: var(--glass-strong); border: 1px solid var(--color-line); }
 </style>
