@@ -53,10 +53,10 @@ const navigate = (target: TabName) => {
   padding: 8px max(var(--page-gutter), env(safe-area-inset-right))
     calc(8px + env(safe-area-inset-bottom))
     max(var(--page-gutter), env(safe-area-inset-left));
-  background: #ffffff;
+  background: rgba(18, 20, 25, 0.64);
   border-top: 1px solid var(--color-line);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -8px 24px rgba(56, 75, 92, 0.06);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(22px);
 }
 
 .bottom-nav__item {
@@ -68,9 +68,10 @@ const navigate = (target: TabName) => {
   width: 100%;
   height: calc(var(--nav-height) - 16px);
   min-width: 0;
-  color: var(--color-muted);
+  color: rgba(255, 255, 255, 0.52);
   line-height: 1.2;
-  border-radius: 17px;
+  background: var(--glass);
+  border: 1px solid transparent;
 }
 
 .bottom-nav__item--active-aqua,
@@ -78,13 +79,8 @@ const navigate = (target: TabName) => {
   color: #ffffff;
 }
 
-.bottom-nav__item--active-aqua {
-  background: var(--color-aqua);
-}
-
-.bottom-nav__item--active-pink {
-  background: var(--color-pink);
-}
+.bottom-nav__item--active-aqua,
+.bottom-nav__item--active-pink { background: rgba(255, 255, 255, 0.14); border-color: var(--color-line); }
 
 .bottom-nav__music {
   height: 22px;
@@ -104,7 +100,7 @@ const navigate = (target: TabName) => {
   width: 18px;
   height: 17px;
   border: 2px solid currentColor;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .bottom-nav__calendar::before {
@@ -123,7 +119,7 @@ const navigate = (target: TabName) => {
   width: 2px;
   height: 6px;
   background: currentColor;
-  border-radius: 2px;
+  border-radius: 0;
   content: "";
 }
 
@@ -144,7 +140,6 @@ const navigate = (target: TabName) => {
     min-height: var(--nav-height);
     padding: 8px;
     border: 1px solid var(--color-line);
-    border-radius: 22px;
     transform: translateX(-50%);
   }
 }

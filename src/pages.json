@@ -4,22 +4,22 @@
       "path": "pages/library/index",
       "style": {
         "navigationStyle": "custom",
-        "backgroundColor": "#DDF9F3"
+        "backgroundColor": "#111318"
       }
     },
     {
       "path": "pages/practice-history/index",
       "style": {
         "navigationStyle": "custom",
-        "backgroundColor": "#FDE6F3"
+        "backgroundColor": "#111318"
       }
     }
   ],
   "globalStyle": {
     "navigationStyle": "custom",
-    "navigationBarTextStyle": "black",
+    "navigationBarTextStyle": "white",
     "navigationBarTitleText": "Idol Dance",
-    "navigationBarBackgroundColor": "#FFFFFF",
-    "backgroundColor": "#EEF2F4"
+    "navigationBarBackgroundColor": "#111318",
+    "backgroundColor": "#111318"
   }
 }

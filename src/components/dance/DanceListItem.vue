@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import AudioTrackList from "@/components/dance/AudioTrackList.vue";
 import type { Dance, ScopeType } from "@/domain/models/dance";
-import { DanceValidationError, useAppStore } from "@/stores/app";
+import { DanceValidationError, useAppStore } from "@/stores/app-v2";
 
 const props = defineProps<{ dance: Dance; index: number; initiallyExpanded?: boolean }>();
 const store = useAppStore();
@@ -26,7 +27,9 @@ const scopeOptions: Array<{ value: ScopeType; label: string }> = [
 const practiceCount = computed(() => store.practiceRecords.filter((record) => record.danceId === props.dance.id).length);
 const statusLabel = computed(() => {
   if (props.dance.state === "mastered") return "已掌握";
-  return props.dance.nextReviewAt && new Date(props.dance.nextReviewAt) <= new Date() ? "待复习" : "复习中";
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+  return props.dance.nextReviewAt && new Date(props.dance.nextReviewAt) <= endOfToday ? "待复习" : "复习中";
 });
 const nextScopeText = computed(() => scopeType.value === "custom"
   ? customScope.value.trim()
@@ -83,8 +86,11 @@ const completeReview = () => {
   const previousState = props.dance.state;
   store.recordReview(props.dance.id);
   confirmReview.value = false;
+  const nextInterval = ({ 1: 3, 2: 7, 3: 14 } as Record<number, number>)[props.dance.reviewRound];
   uni.showToast({
-    title: previousState === "mastered" || props.dance.state === "mastered" ? "复习已记录 · 已掌握 ✦" : "复习已记录 ✦",
+    title: previousState === "mastered" || props.dance.state === "mastered"
+      ? "复习已记录 · 已掌握 ✦"
+      : `复习已记录 · 下一次建议 ${nextInterval} 天后 ✦`,
     icon: "none",
   });
 };
@@ -95,9 +101,9 @@ const confirmDeleteDance = () => {
     content: "删除了就找不回来了哦~",
     confirmText: "删除",
     confirmColor: "#EC6F9E",
-    success: ({ confirm }) => {
+    success: async ({ confirm }) => {
       if (!confirm) return;
-      store.deleteDance(props.dance.id);
+      await store.deleteDance(props.dance.id);
       uni.showToast({ title: "舞蹈记录已删除", icon: "none" });
     },
   });
@@ -164,41 +170,40 @@ const confirmDeleteDance = () => {
         <button @tap="startEditing">编辑学习范围</button>
         <button class="primary" @tap="confirmReview = true">记一次复习</button>
       </view>
+
+      <AudioTrackList :dance-id="dance.id" />
     </view>
   </view>
 </template>
 
 <style scoped lang="scss">
-.dance-card { overflow: hidden; background: #fff; border: 1px solid var(--color-line); border-radius: 16px; }
-.dance-card--expanded { box-shadow: 0 12px 28px rgba(44, 73, 91, 0.08); }
-.dance-card__summary { display: flex; align-items: center; width: 100%; min-height: 82px; padding: 14px; text-align: left; }
-.dance-card__number { display: grid; flex: 0 0 34px; width: 34px; height: 34px; margin-right: 10px; place-items: center; font-size: 12px; border-radius: 11px; }
-.dance-card__number--reviewing { color: var(--color-pink-strong); background: #ffe5f2; }
-.dance-card__number--mastered { color: var(--color-green); background: #d9f8f1; }
+.dance-card { overflow: hidden; color: #fff; background: var(--glass); border: 1px solid var(--color-line); }
+.dance-card--expanded { background: var(--glass-strong); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
+.dance-card__summary { display: flex; width: 100%; min-height: 78px; align-items: center; padding: 12px; text-align: left; }
+.dance-card__number { display: grid; flex: 0 0 34px; width: 34px; height: 34px; margin-right: 10px; color: #fff; font-size: 11px; background: rgba(255, 255, 255, 0.14); border: 1px solid var(--color-line); place-items: center; }
 .dance-card__content { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
-.dance-card__title { overflow: hidden; font-size: 17px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.dance-card__meta { overflow: hidden; color: var(--color-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.dance-card__status-column { display: flex; flex: 0 0 84px; flex-direction: column; align-items: center; gap: 5px; margin-left: 8px; }
-.dance-card__status { display: flex; width: 78px; align-items: center; justify-content: center; height: 30px; font-size: 13px; border-radius: 999px; }
-.dance-card__status--reviewing { color: var(--color-pink-strong); background: #ffe5f2; }
-.dance-card__status--mastered { color: var(--color-green); background: #d9f8f1; }
-.dance-card__delete { width: 100%; margin: 0; padding: 0; color: var(--color-muted); font-size: 12px; line-height: 1.2; text-align: center; background: transparent; }
-.dance-card__details { padding: 0 14px 14px; border-top: 1px solid #edf1f4; }
-.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 0; }
+.dance-card__title { overflow: hidden; font-size: 16px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.dance-card__meta { overflow: hidden; color: var(--color-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.dance-card__status-column { display: flex; flex: 0 0 76px; flex-direction: column; align-items: center; gap: 5px; margin-left: 7px; }
+.dance-card__status { display: flex; width: 72px; height: 28px; align-items: center; justify-content: center; color: #fff; font-size: 11px; background: rgba(255, 255, 255, 0.12); border: 1px solid var(--color-line); }
+.dance-card__status--mastered { background: rgba(198, 255, 234, 0.14); }
+.dance-card__delete { width: 100%; color: var(--color-muted); font-size: 10px; text-align: center; background: transparent; }
+.dance-card__details { display: flex; flex-direction: column; gap: 12px; padding: 0 12px 12px; border-top: 1px solid var(--color-line); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 0 0; }
 .detail-grid view { display: flex; flex-direction: column; gap: 3px; }
-.detail-grid text { color: var(--color-muted); font-size: 11px; }
-.detail-grid strong { font-size: 13px; font-weight: 650; }
+.detail-grid text { color: var(--color-muted); font-size: 10px; }
+.detail-grid strong { color: #fff; font-size: 12px; font-weight: 650; }
 .detail-grid__wide { grid-column: 1 / -1; }
-.dance-card__actions, .scope-editor__actions, .review-confirm view { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.dance-card__actions button, .scope-editor__actions button, .review-confirm button { display: flex; align-items: center; justify-content: center; height: 38px; color: var(--color-muted); background: #f3f6f8; border-radius: 999px; }
-button.primary { color: #fff; background: var(--color-aqua); }
-.review-confirm { display: flex; flex-direction: column; gap: 10px; padding: 12px; font-size: 12px; background: #f3fbfc; border-radius: 12px; }
-.scope-editor { display: flex; flex-direction: column; gap: 9px; }
-.scope-editor__label { font-size: 12px; font-weight: 650; }
-.scope-editor__options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.scope-editor__options button { display: flex; align-items: center; justify-content: center; height: 34px; color: var(--color-muted); font-size: 11px; background: #f3f6f8; border-radius: 9px; }
-.scope-editor__options button.active { color: #168e82; background: #d9f8f1; }
-.scope-editor input { height: 42px; padding: 0 12px; font-size: 13px; border: 1px solid var(--color-line); border-radius: 10px; }
-.scope-editor__warning { display: flex; flex-direction: column; gap: 9px; padding: 11px; color: #8c5b72; font-size: 11px; background: #fff0f6; border-radius: 10px; }
-.scope-editor__warning button { display: flex; align-items: center; justify-content: center; height: 36px; color: #fff; background: var(--color-pink); border-radius: 999px; }
+.dance-card__actions, .scope-editor__actions, .review-confirm view { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.dance-card__actions button, .scope-editor__actions button, .review-confirm button { display: flex; height: 38px; align-items: center; justify-content: center; color: var(--color-muted); font-size: 11px; background: var(--glass); border: 1px solid var(--color-line); }
+button.primary { color: #fff; background: var(--glass-strong); }
+.review-confirm { display: flex; flex-direction: column; gap: 10px; padding: 11px; font-size: 11px; background: rgba(0, 0, 0, 0.16); border: 1px solid var(--color-line); }
+.scope-editor { display: flex; flex-direction: column; gap: 8px; }
+.scope-editor__label { font-size: 11px; font-weight: 650; }
+.scope-editor__options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.scope-editor__options button { display: flex; height: 34px; align-items: center; justify-content: center; color: var(--color-muted); font-size: 10px; background: var(--glass); border: 1px solid var(--color-line); }
+.scope-editor__options button.active { color: #fff; background: var(--glass-strong); }
+.scope-editor input { height: 42px; padding: 0 10px; color: #fff; font-size: 12px; background: rgba(0, 0, 0, 0.18); border: 1px solid var(--color-line); }
+.scope-editor__warning { display: flex; flex-direction: column; gap: 8px; padding: 10px; color: #fff; font-size: 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--color-line); }
+.scope-editor__warning button { display: flex; height: 36px; align-items: center; justify-content: center; color: #fff; background: var(--glass-strong); border: 1px solid var(--color-line); }
 </style>

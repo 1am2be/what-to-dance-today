@@ -368,10 +368,11 @@ const confirmCrop = async () => {
   flex-direction: column;
   align-items: center;
   padding: 20px 18px 18px;
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 28px;
+  color: #ffffff;
+  background: rgba(20, 22, 27, 0.88);
+  border: 1px solid var(--color-line);
   box-shadow: 0 22px 54px rgba(10, 25, 34, 0.28);
+  backdrop-filter: blur(24px);
 }
 
 .crop-panel__header {
@@ -389,7 +390,7 @@ const confirmCrop = async () => {
 }
 
 .crop-panel__title {
-  color: var(--color-ink);
+  color: #ffffff;
   font-size: 22px;
   font-weight: 800;
 }
@@ -410,7 +411,8 @@ const confirmCrop = async () => {
   font-size: 22px;
   font-weight: 500;
   line-height: 1;
-  background: var(--color-pink-strong);
+  background: var(--glass-strong);
+  border: 1px solid var(--color-line);
   border-radius: 50%;
   box-shadow: 0 5px 12px rgba(236, 111, 158, 0.26);
 }
@@ -422,9 +424,8 @@ const confirmCrop = async () => {
   touch-action: none;
   background: #1b222b;
   border: 3px solid #ffffff;
-  border-radius: 18px;
   box-shadow:
-    0 0 0 2px var(--color-aqua),
+    0 0 0 1px rgba(255, 255, 255, 0.58),
     0 12px 26px rgba(35, 55, 67, 0.18);
 }
 
@@ -505,8 +506,8 @@ const confirmCrop = async () => {
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 650;
-  background: #f1f5f7;
-  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--color-line);
 }
 
 .crop-confirm {
@@ -519,8 +520,8 @@ const confirmCrop = async () => {
   color: #ffffff;
   font-size: 15px;
   font-weight: 750;
-  background: var(--color-aqua);
-  border-radius: 15px;
+  background: var(--glass-strong);
+  border: 1px solid var(--color-line);
 }
 
 .crop-confirm[disabled] {

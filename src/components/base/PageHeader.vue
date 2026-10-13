@@ -18,7 +18,6 @@ defineProps<{
       <text class="page-header__title">{{ title }}</text>
       <slot name="title-action" />
     </view>
-    <text class="page-header__sparkle" aria-hidden="true">✦</text>
   </view>
 </template>
 
@@ -31,6 +30,7 @@ defineProps<{
 }
 
 .page-header__eyebrow {
+  color: rgba(255, 255, 255, 0.76);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -44,34 +44,22 @@ defineProps<{
   min-width: 0;
 }
 
-.page-header__eyebrow--aqua {
-  color: var(--color-aqua-strong);
-}
-
-.page-header__eyebrow--blue {
-  color: var(--color-blue);
-}
+.page-header__eyebrow--aqua,
+.page-header__eyebrow--blue { color: rgba(255, 255, 255, 0.76); }
 
 .page-header__title-row {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 6px;
   min-width: 0;
 }
 
 .page-header__title {
-  font-size: 36px;
+  color: #ffffff;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1.08;
-  letter-spacing: -1.5px;
+  letter-spacing: 2px;
 }
 
-.page-header__sparkle {
-  position: absolute;
-  top: -2px;
-  right: 7px;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 38px;
-  line-height: 1;
-}
 </style>

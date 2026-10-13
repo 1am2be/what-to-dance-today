@@ -77,13 +77,14 @@ const days = computed<DayCell[]>(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   height: 64px;
   margin: 0;
   padding: 0;
-  background: #ffffff;
-  border: 0;
-  border-radius: 18px;
+  color: #ffffff;
+  background: var(--glass);
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(10px);
   line-height: 1;
 }
 
@@ -92,11 +93,13 @@ const days = computed<DayCell[]>(() => {
 }
 
 .week-strip__day--selected {
-  background: #ddf6fb;
+  background: var(--glass-strong);
 }
 
 .week-strip__day--disabled {
   opacity: 0.38;
+  color: var(--color-muted);
+  background: var(--glass) !important;
 }
 
 .week-strip__weekday {
@@ -107,7 +110,7 @@ const days = computed<DayCell[]>(() => {
 }
 
 .week-strip__day--selected .week-strip__weekday {
-  color: var(--color-blue);
+  color: #ffffff;
 }
 
 .week-strip__date {

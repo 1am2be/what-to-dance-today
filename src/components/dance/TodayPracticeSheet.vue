@@ -2,10 +2,10 @@
 import { computed, ref, watch } from "vue";
 import BottomSheet from "@/components/base/BottomSheet.vue";
 import type { Dance } from "@/domain/models/dance";
-import { useAppStore } from "@/stores/app";
+import { useAppStore } from "@/stores/app-v2";
 
 const props = defineProps<{ open: boolean }>();
-defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; add: [] }>();
 const store = useAppStore();
 
 const showAllDue = ref(false);
@@ -50,8 +50,11 @@ const review = (dance: Dance, random: boolean) => {
   store.recordReview(dance.id);
   pendingId.value = "";
   if (random) shuffleRandom(dance.id);
+  const nextInterval = ({ 1: 3, 2: 7, 3: 14 } as Record<number, number>)[dance.reviewRound];
   uni.showToast({
-    title: dance.state === "mastered" ? "复习已记录 · 已掌握 ✦" : "复习已记录 ✦",
+    title: dance.state === "mastered"
+      ? "复习已记录 · 已掌握 ✦"
+      : `复习已记录 · 下一次建议 ${nextInterval} 天后 ✦`,
     icon: "none",
   });
 };
@@ -60,7 +63,7 @@ const review = (dance: Dance, random: boolean) => {
 <template>
   <BottomSheet :open="open" @close="$emit('close')">
     <view class="practice-sheet">
-      <text class="sheet-title">今天复习什么 ✦</text>
+      <text class="sheet-title">今天复习什么</text>
 
       <template v-if="store.dances.length">
         <view class="section-heading section-heading--pink">
@@ -113,6 +116,7 @@ const review = (dance: Dance, random: boolean) => {
       <view v-else class="empty-copy empty-copy--large">
         <text>舞单还是空的</text>
         <text>先记录一支学过的舞吧。</text>
+        <button class="empty-copy__action" @tap="emit('add')">＋ 添加第一支舞</button>
       </view>
     </view>
   </BottomSheet>
@@ -122,21 +126,22 @@ const review = (dance: Dance, random: boolean) => {
 .practice-sheet { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
 .sheet-title { margin-bottom: 2px; font-size: 24px; font-weight: 800; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; }
-.section-heading button { display: flex; align-items: center; justify-content: center; min-width: 62px; height: 28px; padding: 0 10px; font-size: 11px; line-height: 1; letter-spacing: 0; background: #f5f7f8; border-radius: 999px; }
-.section-heading--pink { color: var(--color-pink-strong); }
-.section-heading--green { color: var(--color-green); }
+.section-heading button { display: flex; min-width: 62px; height: 28px; align-items: center; justify-content: center; padding: 0 10px; color: #fff; font-size: 11px; line-height: 1; letter-spacing: 0; background: var(--glass); border: 1px solid var(--color-line); }
+.section-heading--pink { color: #ffffff; }
+.section-heading--green { color: rgba(255, 255, 255, 0.68); }
 .dance-list { display: flex; flex-direction: column; gap: 8px; }
-.dance-row { display: flex; align-items: center; min-height: 72px; padding: 12px 12px 12px 14px; border: 1px solid var(--color-line); border-radius: 16px; }
-.dance-row__number { display: grid; flex: 0 0 34px; width: 34px; height: 34px; margin-right: 10px; place-items: center; font-size: 12px; border-radius: 11px; }
-.dance-row__number--pink { color: var(--color-pink-strong); background: #ffe5f2; }
-.dance-row__number--green { color: var(--color-green); background: #dcfaf3; }
+.dance-row { display: flex; min-height: 72px; align-items: center; padding: 12px 12px 12px 14px; background: var(--glass); border: 1px solid var(--color-line); }
+.dance-row__number { display: grid; flex: 0 0 34px; width: 34px; height: 34px; margin-right: 10px; color: #fff; font-size: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--color-line); place-items: center; }
+.dance-row__number--pink,
+.dance-row__number--green { color: #fff; }
 .dance-row__content { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
 .dance-row__title { overflow: hidden; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .dance-row__meta { overflow: hidden; color: var(--color-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.dance-row__action { display: flex; align-items: center; justify-content: center; flex: 0 0 78px; height: 30px; margin-left: 8px; padding: 0 10px; font-size: 13px; line-height: 1; border-radius: 999px; }
-.dance-row__action--pink { color: var(--color-pink-strong); background: #ffe5f2; }
-.dance-row__action--green { color: var(--color-green); background: #dcfaf3; }
-.empty-copy { display: flex; flex-direction: column; gap: 4px; padding: 14px; color: var(--color-muted); font-size: 13px; background: #f7f9fa; border-radius: 14px; }
+.dance-row__action { display: flex; flex: 0 0 78px; height: 30px; align-items: center; justify-content: center; margin-left: 8px; padding: 0 10px; color: #fff; font-size: 13px; line-height: 1; background: rgba(255, 255, 255, 0.12); border: 1px solid var(--color-line); }
+.dance-row__action--pink,
+.dance-row__action--green { color: #fff; }
+.empty-copy { display: flex; flex-direction: column; gap: 4px; padding: 14px; color: var(--color-muted); font-size: 13px; background: var(--glass); border: 1px solid var(--color-line); }
 .empty-copy text:first-child { color: var(--color-ink); font-weight: 650; }
 .empty-copy--large { padding: 46px 18px; text-align: center; }
+.empty-copy__action { display: flex; height: 40px; align-items: center; justify-content: center; align-self: center; margin-top: 10px !important; padding: 0 16px; color: #fff; font-size: 12px; font-weight: 700; background: var(--glass-strong); border: 1px solid var(--color-line); }
 </style>

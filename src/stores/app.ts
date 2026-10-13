@@ -199,6 +199,8 @@ export const useAppStore = defineStore("app", () => {
           id: nextUniqueId("artist", artists.value.map((item) => item.id)),
           name: input.artistName.trim(),
           imageUrl: input.artistImageUrl,
+          imageAssetId: null,
+          sortOrder: artists.value.length,
           createdAt: nowIso,
           updatedAt: nowIso,
         };
@@ -240,6 +242,7 @@ export const useAppStore = defineStore("app", () => {
       learnedAt: input.sourceType === "new" ? practicedAt : null,
       lastReviewAt: null,
       nextReviewAt: input.sourceType === "new" ? addDays(practicedAt, 1) : null,
+      sortOrder: dances.value.filter((item) => item.artistId === artist!.id).length,
       createdAt: nowIso,
       updatedAt: nowIso,
     };

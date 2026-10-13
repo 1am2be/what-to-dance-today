@@ -24,7 +24,7 @@ uni-page-body {
 page {
   min-height: 100vh;
   min-height: 100dvh;
-  background: #eef2f4;
+  background: #111318;
   color: var(--color-ink);
   font-family: Inter, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -33,7 +33,7 @@ page {
 body {
   min-height: 100vh;
   min-height: 100dvh;
-  background: #eef2f4;
+  background: #111318;
   overflow-x: hidden;
   overscroll-behavior-y: none;
 }
@@ -41,23 +41,28 @@ body {
 view,
 text,
 button,
-image {
+image,
+input {
   box-sizing: border-box;
 }
 
 button {
-  margin: 0;
+  margin: 0 !important;
   padding: 0;
   color: inherit;
   font: inherit;
   line-height: inherit;
   background: transparent;
   border: 0;
+  text-align: center;
 }
 
 button::after {
   border: 0;
 }
+
+input { color: #ffffff; }
+input::placeholder { color: rgba(255, 255, 255, 0.42); }
 
 .mobile-page {
   position: relative;
@@ -67,6 +72,8 @@ button::after {
   min-height: 100dvh;
   margin: 0 auto;
   overflow-x: hidden;
+  color: #ffffff;
+  background: #111318;
 }
 
 .page-content {
@@ -81,7 +88,6 @@ button::after {
     margin: 18px auto;
     overflow: hidden;
     border: 1px solid var(--color-line);
-    border-radius: 36px;
-    box-shadow: 0 18px 60px rgba(56, 75, 92, 0.12);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
   }
 }

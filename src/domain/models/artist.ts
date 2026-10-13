@@ -2,6 +2,8 @@ export interface Artist {
   id: string;
   name: string;
   imageUrl: string;
+  imageAssetId: string | null;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }

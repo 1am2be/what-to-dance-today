@@ -14,6 +14,7 @@ export interface Dance {
   learnedAt: string | null;
   lastReviewAt: string | null;
   nextReviewAt: string | null;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }

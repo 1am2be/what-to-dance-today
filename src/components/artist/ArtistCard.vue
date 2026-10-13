@@ -30,13 +30,14 @@ defineEmits<{
 <style scoped lang="scss">
 .artist-card {
   width: 100%;
-  padding: 8px 8px 0;
+  padding: 5px 5px 0;
   overflow: hidden;
   text-align: left;
   line-height: 1.2;
-  background: var(--color-white);
-  border-radius: var(--radius-card);
-  box-shadow: 0 10px 24px rgba(96, 153, 160, 0.07);
+  color: #ffffff;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .artist-card__art {
@@ -45,26 +46,15 @@ defineEmits<{
   aspect-ratio: 1 / 1;
   overflow: hidden;
   isolation: isolate;
-  border-radius: 14px 14px 4px 4px;
+  border: 0;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
-.artist-card__art--aqua {
-  background: radial-gradient(circle at 72% 68%, #edf7ff 0, #c9f7fa 46%, #e9fbff 100%);
-}
-
-.artist-card__art--silver {
-  background: radial-gradient(circle at 68% 45%, #f2f5f8 0, #cdd6e2 58%, #eaf0f5 100%);
-}
-
-.artist-card__art--pearl {
-  background: linear-gradient(132deg, #ffe8f4 0%, #f5f7ff 43%, #e6fbff 100%);
-}
-
-.artist-card__art--mint {
-  background: radial-gradient(circle at 30% 78%, #9ee8d9 0, #cdf8ef 48%, #e6fbf8 100%);
-}
+.artist-card__art--aqua,
+.artist-card__art--silver,
+.artist-card__art--pearl,
+.artist-card__art--mint { background: rgba(255, 255, 255, 0.08); }
 
 .artist-card__image {
   display: block;
@@ -78,15 +68,15 @@ defineEmits<{
 .artist-card__body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-height: 68px;
-  padding: 13px 0 16px;
+  gap: 4px;
+  min-height: 52px;
+  padding: 9px 0 10px;
 }
 
 .artist-card__name {
   overflow: hidden;
-  font-size: 16px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -94,6 +84,6 @@ defineEmits<{
 
 .artist-card__count {
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 10px;
 }
 </style>

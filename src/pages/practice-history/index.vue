@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import AppBackground from "@/components/base/AppBackground.vue";
 import BottomNavigation from "@/components/base/BottomNavigation.vue";
 import PageHeader from "@/components/base/PageHeader.vue";
 import PracticeRecordCard from "@/components/practice/PracticeRecordCard.vue";
 import WeekStrip from "@/components/practice/WeekStrip.vue";
 import type { PracticeRecordView } from "@/domain/models/practice-record";
-import { useAppStore } from "@/stores/app";
+import { useAppStore } from "@/stores/app-v2";
 
 interface RecordGroup {
   key: string;
@@ -29,7 +30,7 @@ const monthNames = [
 ];
 
 const store = useAppStore();
-onMounted(store.initialize);
+onMounted(() => { void store.initialize(); });
 
 const toDateKey = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -101,6 +102,11 @@ const selectDateFromPicker = (event: { detail: { value: string } }) => {
 
 <template>
   <view class="mobile-page history-page">
+    <AppBackground
+      :src="store.backgroundUrl"
+      :position-x="store.settings.backgroundPositionX"
+      :position-y="store.settings.backgroundPositionY"
+    />
     <view class="page-content">
       <PageHeader :eyebrow="currentMonthLabel" title="练舞记录">
         <template #title-action>
@@ -133,8 +139,14 @@ const selectDateFromPicker = (event: { detail: { value: string } }) => {
           </view>
         </view>
         <view v-if="!groups.length" class="history-empty">
-          <text>这一天还没有练舞记录</text>
-          <text>跳一支喜欢的舞吧 ✦</text>
+          <template v-if="!store.practiceRecordViews.length">
+            <text>还没有练舞记录</text>
+            <text>第一次练舞后，记录会出现在这里。</text>
+          </template>
+          <template v-else>
+            <text>这一天还没有练舞记录</text>
+            <text>选择其他日期看看吧 ✦</text>
+          </template>
         </view>
       </view>
     </view>
@@ -145,8 +157,10 @@ const selectDateFromPicker = (event: { detail: { value: string } }) => {
 
 <style scoped lang="scss">
 .history-page {
-  background: var(--color-pink-page);
+  background: #111318;
 }
+
+.page-content { position: relative; z-index: 2; }
 
 .history-week {
   margin-top: 30px;
@@ -162,9 +176,7 @@ const selectDateFromPicker = (event: { detail: { value: string } }) => {
   font-weight: 750;
   line-height: 1;
   letter-spacing: 0.4px;
-  text-shadow:
-    0 1px 0 rgba(219, 82, 139, 0.62),
-    0 2px 5px rgba(219, 82, 139, 0.22);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 .history-groups {
@@ -200,8 +212,9 @@ const selectDateFromPicker = (event: { detail: { value: string } }) => {
   color: var(--color-muted);
   font-size: 13px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.62);
-  border-radius: 20px;
+  background: var(--glass);
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(12px);
 }
 
 .history-empty text:first-child {

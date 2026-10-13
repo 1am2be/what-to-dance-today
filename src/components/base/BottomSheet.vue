@@ -37,7 +37,8 @@ defineEmits<{ close: [] }>();
   inset: 0;
   width: 100%;
   height: 100%;
-  background: rgba(28, 38, 48, 0.23);
+  background: rgba(4, 5, 8, 0.58);
+  backdrop-filter: blur(5px);
 }
 
 .sheet-layer--center {
@@ -51,17 +52,18 @@ defineEmits<{ close: [] }>();
   max-height: 92dvh;
   padding: 14px 24px calc(28px + env(safe-area-inset-bottom));
   overflow-y: auto;
-  background: #ffffff;
-  border-radius: 30px 30px 0 0;
-  box-shadow: 0 -14px 36px rgba(36, 52, 65, 0.12);
+  color: #ffffff;
+  background: rgba(22, 24, 29, 0.76);
+  border-top: 1px solid var(--color-line);
+  box-shadow: 0 -18px 42px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(26px);
 }
 
 .sheet__handle {
   width: 44px;
   height: 4px;
   margin: 0 auto 14px;
-  background: var(--color-line);
-  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .sheet.sheet--center {
@@ -79,7 +81,7 @@ defineEmits<{ close: [] }>();
   .sheet {
     max-width: 390px;
     margin-bottom: 18px;
-    border-radius: 30px;
+    border-radius: 0;
   }
 
   .sheet.sheet--center {

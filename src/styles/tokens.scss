@@ -1,19 +1,21 @@
 :root,
 page {
-  --color-ink: #121923;
-  --color-muted: #7a8796;
-  --color-line: #cbd5df;
+  --color-ink: #ffffff;
+  --color-muted: rgba(255, 255, 255, 0.58);
+  --color-line: rgba(255, 255, 255, 0.25);
   --color-white: #ffffff;
-  --color-mint-page: #dffaf4;
-  --color-pink-page: #fde6f3;
+  --color-mint-page: #15171b;
+  --color-pink-page: #15171b;
   --color-aqua: #7ed9e7;
-  --color-aqua-strong: #12b9d5;
+  --color-aqua-strong: #ffffff;
   --color-pink: #f58bc3;
-  --color-pink-strong: #ec6f9e;
-  --color-blue: #1768f2;
-  --color-green: #2fc5a4;
-  --radius-card: 20px;
-  --radius-pill: 999px;
+  --color-pink-strong: #ffffff;
+  --color-blue: #ffffff;
+  --color-green: #ffffff;
+  --glass: rgba(255, 255, 255, 0.09);
+  --glass-strong: rgba(255, 255, 255, 0.16);
+  --radius-card: 0;
+  --radius-pill: 0;
   --page-gutter: 24px;
   --nav-height: 70px;
 }

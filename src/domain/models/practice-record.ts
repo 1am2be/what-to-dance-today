@@ -12,6 +12,7 @@ export interface PracticeRecordView {
   id: string;
   danceId: string;
   artistName: string;
+  artistImageUrl: string;
   artistTone: "pink" | "blue";
   songTitle: string;
   scopeText: string;

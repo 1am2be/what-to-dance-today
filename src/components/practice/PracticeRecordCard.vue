@@ -9,20 +9,13 @@ defineEmits<{
   select: [danceId: string];
 }>();
 
-const artistNameLines = (name: string) => name.trim().split(/\s+/).filter(Boolean);
 </script>
 
 <template>
   <button class="record-card" :aria-label="`${record.songTitle}，${record.actionLabel}`" @tap="$emit('select', record.danceId)">
     <view class="record-card__avatar" :class="`record-card__avatar--${record.artistTone}`">
-      <view
-        class="record-card__artist"
-        :class="{ 'record-card__artist--long': record.artistName.length > 8 }"
-      >
-        <text v-for="line in artistNameLines(record.artistName)" :key="line" class="record-card__artist-line">
-          {{ line }}
-        </text>
-      </view>
+      <image v-if="record.artistImageUrl" :src="record.artistImageUrl" mode="aspectFill" />
+      <text v-else class="record-card__fallback">{{ record.artistName.slice(0, 2) }}</text>
     </view>
 
     <view class="record-card__content">
@@ -43,8 +36,10 @@ const artistNameLines = (name: string) => name.trim().split(/\s+/).filter(Boolea
   padding: 16px 26px;
   text-align: left;
   line-height: 1.2;
-  background: #ffffff;
-  border-radius: 16px;
+  color: #ffffff;
+  background: var(--glass);
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(12px);
 }
 
 .record-card__avatar {
@@ -54,42 +49,19 @@ const artistNameLines = (name: string) => name.trim().split(/\s+/).filter(Boolea
   height: 44px;
   margin-right: 14px;
   place-items: center;
-  padding: 4px;
+  padding: 0;
+  overflow: hidden;
   font-size: 8px;
   font-weight: 700;
-  border: 1px solid var(--color-line);
-  border-radius: 50%;
+  border: 0;
+  border-radius: 0;
 }
 
-.record-card__artist {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  line-height: 1.05;
-  text-align: center;
-}
+.record-card__avatar image { display: block; width: 100%; height: 100%; object-fit: cover; transform: translateZ(0) scale(1.01); }
+.record-card__fallback { padding: 3px; font-size: 8px; font-weight: 700; text-align: center; }
 
-.record-card__artist-line {
-  display: block;
-  max-width: 100%;
-  white-space: nowrap;
-}
-
-.record-card__artist--long {
-  font-size: 6.5px;
-}
-
-.record-card__avatar--pink {
-  color: var(--color-pink-strong);
-  background: radial-gradient(circle at 35% 35%, #ffffff, #ffedf6);
-}
-
-.record-card__avatar--blue {
-  color: var(--color-aqua-strong);
-  background: radial-gradient(circle at 35% 35%, #ffffff, #e8f7ff);
-}
+.record-card__avatar--pink,
+.record-card__avatar--blue { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
 
 .record-card__content {
   display: flex;
@@ -123,11 +95,6 @@ const artistNameLines = (name: string) => name.trim().split(/\s+/).filter(Boolea
   border-radius: 50%;
 }
 
-.record-card__dot--aqua {
-  background: #35b9cf;
-}
-
-.record-card__dot--pink {
-  background: var(--color-pink-strong);
-}
+.record-card__dot--aqua { background: rgba(255, 255, 255, 0.92); }
+.record-card__dot--pink { background: rgba(255, 255, 255, 0.55); }
 </style>
