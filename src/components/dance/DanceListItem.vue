@@ -95,6 +95,15 @@ const completeReview = () => {
   });
 };
 
+const toggleDanceState = () => {
+  const nextState = props.dance.state === "mastered" ? "reviewing" : "mastered";
+  if (!store.setDanceState(props.dance.id, nextState)) return;
+  uni.showToast({
+    title: nextState === "mastered" ? "已改为已掌握" : "已改为复习中 · 明天开始复习",
+    icon: "none",
+  });
+};
+
 const confirmDeleteDance = () => {
   uni.showModal({
     title: `删除 ${props.dance.songTitle}？`,
@@ -121,7 +130,12 @@ const confirmDeleteDance = () => {
         <text class="dance-card__meta">{{ dance.scopeText }} · {{ practiceCount }} 次练习</text>
       </view>
       <view class="dance-card__status-column">
-        <text class="dance-card__status" :class="`dance-card__status--${dance.state}`">{{ statusLabel }}</text>
+        <button
+          class="dance-card__status"
+          :class="`dance-card__status--${dance.state}`"
+          :aria-label="`${statusLabel}，点击切换状态`"
+          @tap.stop="toggleDanceState"
+        >{{ statusLabel }}</button>
         <button v-if="expanded" class="dance-card__delete" @tap.stop="confirmDeleteDance">删除这条记录</button>
       </view>
     </view>
@@ -185,7 +199,7 @@ const confirmDeleteDance = () => {
 .dance-card__title { overflow: hidden; font-size: 16px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .dance-card__meta { overflow: hidden; color: var(--color-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .dance-card__status-column { display: flex; flex: 0 0 76px; flex-direction: column; align-items: center; gap: 5px; margin-left: 7px; }
-.dance-card__status { display: flex; width: 72px; height: 28px; align-items: center; justify-content: center; color: #fff; font-size: 11px; background: rgba(255, 255, 255, 0.12); border: 1px solid var(--color-line); }
+.dance-card__status { display: flex; width: 72px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; padding: 0; color: #fff; font-size: 11px; line-height: 1; background: rgba(255, 255, 255, 0.12); border: 1px solid var(--color-line); }
 .dance-card__status--mastered { background: rgba(198, 255, 234, 0.14); }
 .dance-card__delete { width: 100%; color: var(--color-muted); font-size: 10px; text-align: center; background: transparent; }
 .dance-card__details { display: flex; flex-direction: column; gap: 12px; padding: 0 12px 12px; border-top: 1px solid var(--color-line); }

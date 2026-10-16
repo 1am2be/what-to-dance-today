@@ -25,6 +25,7 @@ const reorderOpen = ref(false);
 const selectedArtistId = ref("");
 const focusDanceId = ref("");
 const currentPage = ref(0);
+let pageSwipeStart = { x: 0, y: 0 };
 const totalDances = computed(() => store.dances.length);
 const selectedArtist = computed(() => store.artistSummaries.find((artist) => artist.id === selectedArtistId.value));
 const pageCount = computed(() => Math.max(1, Math.ceil(store.artistSummaries.length / 9)));
@@ -46,6 +47,22 @@ onLoad((query) => {
 watch(pageCount, (count) => {
   if (currentPage.value >= count) currentPage.value = count - 1;
 });
+
+const beginPageSwipe = (event: TouchEvent) => {
+  const touch = event.touches?.[0];
+  if (!touch) return;
+  pageSwipeStart = { x: touch.clientX, y: touch.clientY };
+};
+
+const finishPageSwipe = (event: TouchEvent) => {
+  const touch = event.changedTouches?.[0];
+  if (!touch) return;
+  const deltaX = touch.clientX - pageSwipeStart.x;
+  const deltaY = touch.clientY - pageSwipeStart.y;
+  if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.2) return;
+  if (deltaX < 0 && currentPage.value < pageCount.value - 1) currentPage.value += 1;
+  if (deltaX > 0 && currentPage.value > 0) currentPage.value -= 1;
+};
 
 const openArtist = (artist: ArtistSummary) => {
   selectedArtistId.value = artist.id;
@@ -177,32 +194,36 @@ const restoreBackup = (file: File) => {
         <button @tap="addSheetOpen = true">＋ 添加第一支舞</button>
       </view>
 
-      <view v-else class="artist-grid">
-        <ArtistCard
-          v-for="artist in visibleArtists"
-          :key="artist.id"
-          :artist="artist"
-          @select="openArtist"
-        />
+      <view
+        v-else
+        class="artist-pager"
+        :class="{ 'artist-pager--paged': pageCount > 1 }"
+        @touchstart="beginPageSwipe"
+        @touchend="finishPageSwipe"
+      >
+        <view class="artist-grid">
+          <ArtistCard
+            v-for="artist in visibleArtists"
+            :key="artist.id"
+            :artist="artist"
+            @select="openArtist"
+          />
+        </view>
       </view>
 
       <view v-if="pageCount > 1" class="page-switcher">
-        <button :disabled="currentPage === 0" aria-label="上一页" @tap="currentPage--">←</button>
-        <view>
-          <button
-            v-for="page in pageCount"
-            :key="page"
-            :class="{ active: currentPage === page - 1 }"
-            :aria-label="`第 ${page} 页`"
-            @tap="currentPage = page - 1"
-          />
-        </view>
-        <button :disabled="currentPage === pageCount - 1" aria-label="下一页" @tap="currentPage++">→</button>
+        <button
+          v-for="page in pageCount"
+          :key="page"
+          :class="{ active: currentPage === page - 1 }"
+          :aria-label="`第 ${page} 页`"
+          @tap="currentPage = page - 1"
+        />
       </view>
     </view>
 
     <BottomNavigation active="library" />
-    <AddDanceSheet :open="addSheetOpen" @close="addSheetOpen = false" />
+    <AddDanceSheet v-if="addSheetOpen" :open="addSheetOpen" @close="addSheetOpen = false" />
     <TodayPracticeSheet :open="practiceSheetOpen" @close="practiceSheetOpen = false" @add="openAddFromPractice" />
     <UsageGuideSheet :open="usageGuideOpen" @close="usageGuideOpen = false" />
     <EditPlaylistSheet
@@ -281,15 +302,46 @@ const restoreBackup = (file: File) => {
   margin-top: 24px;
 }
 
+.artist-pager--paged {
+  min-height: calc(min(100vw, 390px) - var(--page-gutter) - var(--page-gutter) + 156px);
+  touch-action: pan-y;
+}
+
 .library-empty { display: flex; min-height: 260px; flex-direction: column; align-items: center; justify-content: center; gap: 7px; margin-top: 24px; padding: 30px 20px; text-align: center; background: var(--glass); border: 1px solid var(--color-line); backdrop-filter: blur(14px); }
 .library-empty__title { color: #fff; font-size: 20px; font-weight: 800; letter-spacing: 1px; }
 .library-empty__copy { color: var(--color-muted); font-size: 12px; }
 .library-empty button { display: flex; height: 42px; align-items: center; justify-content: center; margin-top: 13px !important; padding: 0 18px; color: #fff; font-size: 13px; font-weight: 700; background: var(--glass-strong); border: 1px solid var(--color-line); }
 
-.page-switcher { display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; gap: 10px; margin-top: 18px; }
-.page-switcher > button { display: grid; width: 38px; height: 34px; color: #fff; background: var(--glass); border: 1px solid var(--color-line); place-items: center; }
-.page-switcher > button[disabled] { opacity: 0.25; }
-.page-switcher > view { display: flex; align-items: center; justify-content: center; gap: 7px; }
-.page-switcher > view button { width: 6px; height: 6px; background: rgba(255, 255, 255, 0.34); border-radius: 50%; }
-.page-switcher > view button.active { background: #fff; transform: scale(1.35); }
+.page-switcher {
+  position: fixed;
+  z-index: calc(var(--z-bottom-nav) - 1);
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 16px);
+  left: 50%;
+  display: flex;
+  min-height: 18px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transform: translateX(-50%);
+}
+.page-switcher > button {
+  display: block;
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  min-height: 8px;
+  max-width: 8px;
+  max-height: 8px;
+  flex: 0 0 8px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.34);
+  border: 0;
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+}
+.page-switcher > button.active { background: #fff; transform: scale(1.35); }
+
+@media (min-width: 768px) {
+  .page-switcher { bottom: calc(18px + var(--nav-height) + 16px); }
+}
 </style>

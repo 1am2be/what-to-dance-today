@@ -161,16 +161,21 @@ const selectDate = (value: string) => {
 }
 
 .history-date-picker {
+  display: inline-flex;
+  height: 22px;
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1px;
+  background: transparent;
+  border: 0;
 }
 
 .history-date-trigger {
   color: #ffffff;
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.4px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 .history-groups {

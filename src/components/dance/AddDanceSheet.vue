@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, shallowRef, watch } from "vue";
 import BottomSheet from "@/components/base/BottomSheet.vue";
 import ImageCropSheet from "@/components/base/ImageCropSheet.vue";
 import Mp3UploadButton from "@/components/dance/Mp3UploadButton";
@@ -21,7 +21,8 @@ const useNewArtist = ref(false);
 const error = ref("");
 const cropOpen = ref(false);
 const cropSource = ref("");
-const stagedAudio = ref<File[]>([]);
+const stagedAudio = shallowRef<File[]>([]);
+const submitting = ref(false);
 const form = reactive({
   artistId: "",
   artistName: "",
@@ -42,13 +43,20 @@ const scopeOptions: Array<{ value: ScopeType; label: string }> = [
 const selectedArtist = computed(() => store.artists.find((artist) => artist.id === form.artistId));
 const scopeText = computed(() => scopeOptions.find((item) => item.value === form.scopeType)?.label ?? "");
 
+const releaseCroppedArtistImage = () => {
+  if (form.artistImageUrl.startsWith("blob:") && typeof URL !== "undefined") {
+    URL.revokeObjectURL(form.artistImageUrl);
+  }
+  form.artistImageUrl = "";
+};
+
 const reset = () => {
+  releaseCroppedArtistImage();
   sourceType.value = "new";
   useNewArtist.value = false;
   error.value = "";
   form.artistId = store.artists[0]?.id ?? "";
   form.artistName = "";
-  form.artistImageUrl = "";
   form.songTitle = "";
   form.scopeType = "chorus";
   form.customScope = "";
@@ -56,10 +64,22 @@ const reset = () => {
   cropOpen.value = false;
   cropSource.value = "";
   stagedAudio.value = [];
+  submitting.value = false;
 };
 
 watch(() => props.open, (open) => {
   if (open) reset();
+  else {
+    stagedAudio.value = [];
+    cropSource.value = "";
+    cropOpen.value = false;
+  }
+});
+
+onBeforeUnmount(() => {
+  releaseCroppedArtistImage();
+  stagedAudio.value = [];
+  cropSource.value = "";
 });
 
 const selectArtist = (event: { detail: { value: number } }) => {
@@ -87,6 +107,7 @@ const replaceCropImage = () => {
 };
 
 const applyCroppedImage = (imageUrl: string) => {
+  releaseCroppedArtistImage();
   form.artistImageUrl = imageUrl;
   cropOpen.value = false;
   cropSource.value = "";
@@ -142,6 +163,8 @@ const readDuration = (file: File) => new Promise<number | null>((resolve) => {
 });
 
 const submit = async () => {
+  if (submitting.value) return;
+  submitting.value = true;
   error.value = "";
   try {
     const result = await store.addDance({
@@ -189,6 +212,8 @@ const submit = async () => {
     emit("close");
   } catch (caught) {
     error.value = caught instanceof DanceValidationError ? messageFor(caught) : "保存失败，请再试一次";
+  } finally {
+    submitting.value = false;
   }
 };
 </script>
@@ -258,7 +283,9 @@ const submit = async () => {
       </view>
 
       <text v-if="error" class="form-error">{{ error }}</text>
-      <button class="primary-button" @tap="submit">＋ {{ sourceType === "new" ? "记录学习" : "加入我的舞单" }}</button>
+      <button class="primary-button" :disabled="submitting" @tap="submit">
+        {{ submitting ? "正在保存…" : `＋ ${sourceType === "new" ? "记录学习" : "加入我的舞单"}` }}
+      </button>
       </view>
     </BottomSheet>
     <ImageCropSheet
@@ -293,4 +320,5 @@ const submit = async () => {
 .scope-options .active { color: #fff; background: var(--glass-strong); }
 .form-error { color: var(--color-pink-strong); font-size: 13px; }
 .primary-button { display: flex; height: 52px; align-items: center; justify-content: center; padding: 0 20px; color: #ffffff; font-size: 17px; font-weight: 700; background: var(--glass-strong); border: 1px solid var(--color-line); }
+.primary-button[disabled] { opacity: 0.5; }
 </style>

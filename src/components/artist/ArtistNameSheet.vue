@@ -32,5 +32,5 @@ watch(() => props.open, (open) => {
 .artist-name-sheet__header button { display: grid; width: 36px; height: 36px; padding: 0 0 2px; color: #fff; font-size: 23px; line-height: 1; background: var(--glass-strong); border: 1px solid var(--color-line); place-items: center; }
 .artist-name-sheet__label { color: var(--color-muted); font-size: 12px; }
 .artist-name-sheet input { height: 50px; padding: 0 14px; color: #fff; font-size: 16px; background: var(--glass); border: 1px solid var(--color-line); }
-.artist-name-sheet__save { display: flex; height: 48px; align-items: center; justify-content: center; color: #fff; font-weight: 750; background: var(--glass-strong); border: 1px solid var(--color-line); }
+.artist-name-sheet__save { position: sticky; bottom: 0; z-index: 2; display: flex; height: 48px; flex: 0 0 48px; align-items: center; justify-content: center; margin-top: 4px !important; color: #fff; font-weight: 750; background: rgba(43, 45, 51, 0.96); border: 1px solid var(--color-line); }
 </style>

@@ -77,10 +77,16 @@ const replaceCropImage = () => {
 };
 
 const applyCroppedImage = async (imageUrl: string) => {
-  if (!await store.updateArtistImage(props.artist.id, imageUrl)) return;
-  cropOpen.value = false;
-  cropSource.value = "";
-  uni.showToast({ title: "头像已更换", icon: "none" });
+  try {
+    if (!await store.updateArtistImage(props.artist.id, imageUrl)) return;
+    cropOpen.value = false;
+    cropSource.value = "";
+    uni.showToast({ title: "头像已更换", icon: "none" });
+  } catch {
+    uni.showToast({ title: "头像保存失败，请再试一次", icon: "none" });
+  } finally {
+    if (imageUrl.startsWith("blob:") && typeof URL !== "undefined") URL.revokeObjectURL(imageUrl);
+  }
 };
 
 const confirmDeleteArtist = () => {

@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { computed, getCurrentInstance, nextTick, ref, watch } from "vue";
+import { computed, getCurrentInstance, nextTick, onBeforeUnmount, ref, watch } from "vue";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   open: boolean;
   source: string;
-}>();
+  aspectRatio?: number;
+  outputWidth?: number;
+  outputHeight?: number;
+  title?: string;
+  subtitle?: string;
+}>(), {
+  aspectRatio: 1,
+  outputWidth: 600,
+  outputHeight: 600,
+  title: "调整图片",
+  subtitle: "拖动图片，双指或滑杆缩放",
+});
 
 const emit = defineEmits<{
   close: [];
@@ -12,13 +23,13 @@ const emit = defineEmits<{
   confirm: [imageUrl: string];
 }>();
 
-const OUTPUT_SIZE = 600;
 const MIN_CROP_SIZE = 220;
 const MAX_CROP_SIZE = 320;
 const canvasId = "artist-image-crop-canvas";
 const instance = getCurrentInstance();
 
-const cropSize = ref(280);
+const cropWidth = ref(280);
+const cropHeight = ref(280);
 const naturalWidth = ref(1);
 const naturalHeight = ref(1);
 const baseWidth = ref(1);
@@ -29,6 +40,8 @@ const scale = ref(1);
 const workingSource = ref("");
 const imageReady = ref(false);
 const exporting = ref(false);
+let normalizedSourceUrl = "";
+let initializationId = 0;
 
 let gestureMode: "drag" | "pinch" | null = null;
 let lastPoint = { x: 0, y: 0 };
@@ -38,16 +51,16 @@ let pinchStartScale = 1;
 const imageStyle = computed(() => ({
   width: `${baseWidth.value}px`,
   height: `${baseHeight.value}px`,
-  left: `${cropSize.value / 2 - baseWidth.value / 2 + offsetX.value}px`,
-  top: `${cropSize.value / 2 - baseHeight.value / 2 + offsetY.value}px`,
+  left: `${cropWidth.value / 2 - baseWidth.value / 2 + offsetX.value}px`,
+  top: `${cropHeight.value / 2 - baseHeight.value / 2 + offsetY.value}px`,
   transform: `scale(${scale.value}) translateZ(0)`,
 }));
 
 const clamp = (value: number, minimum: number, maximum: number) => Math.min(maximum, Math.max(minimum, value));
 
 const clampOffsets = () => {
-  const maxX = Math.max(0, (baseWidth.value * scale.value - cropSize.value) / 2);
-  const maxY = Math.max(0, (baseHeight.value * scale.value - cropSize.value) / 2);
+  const maxX = Math.max(0, (baseWidth.value * scale.value - cropWidth.value) / 2);
+  const maxY = Math.max(0, (baseHeight.value * scale.value - cropHeight.value) / 2);
   offsetX.value = clamp(offsetX.value, -maxX, maxX);
   offsetY.value = clamp(offsetY.value, -maxY, maxY);
 };
@@ -62,29 +75,75 @@ const getImageInfo = (src: string) => new Promise<UniNamespace.GetImageInfoSucce
   uni.getImageInfo({ src, success: resolve, fail: reject });
 });
 
+const releaseNormalizedSource = () => {
+  if (normalizedSourceUrl && typeof URL !== "undefined") URL.revokeObjectURL(normalizedSourceUrl);
+  normalizedSourceUrl = "";
+};
+
+const loadHtmlImage = (source: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+  const image = new Image();
+  image.decoding = "async";
+  image.onload = () => resolve(image);
+  image.onerror = reject;
+  image.src = source;
+});
+
+const canvasBlob = (canvas: HTMLCanvasElement, quality = 0.88) => new Promise<Blob>((resolve, reject) => {
+  canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("canvas-blob")), "image/jpeg", quality);
+});
+
+const prepareH5Source = async (source: string) => {
+  const image = await loadHtmlImage(source);
+  const width = Math.max(1, image.naturalWidth || image.width);
+  const height = Math.max(1, image.naturalHeight || image.height);
+  const maximumEdge = 2560;
+  if (Math.max(width, height) <= maximumEdge) return { path: source, width, height };
+  const ratio = maximumEdge / Math.max(width, height);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(width * ratio));
+  canvas.height = Math.max(1, Math.round(height * ratio));
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("canvas-context");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const blob = await canvasBlob(canvas, 0.9);
+  releaseNormalizedSource();
+  normalizedSourceUrl = URL.createObjectURL(blob);
+  return { path: normalizedSourceUrl, width: canvas.width, height: canvas.height };
+};
+
 const initializeCrop = async () => {
+  const currentInitialization = ++initializationId;
   imageReady.value = false;
   exporting.value = false;
   await nextTick();
   const system = uni.getSystemInfoSync();
+  const availableWidth = Math.max(180, Math.min(MAX_CROP_SIZE, Number(system.windowWidth || 390) - 48));
   const availableHeight = Math.max(MIN_CROP_SIZE, Number(system.windowHeight || 700) - 300);
-  cropSize.value = Math.max(
-    MIN_CROP_SIZE,
-    Math.min(MAX_CROP_SIZE, Number(system.windowWidth || 390) - 48, availableHeight),
-  );
+  cropWidth.value = Math.max(180, Math.min(availableWidth, availableHeight * props.aspectRatio));
+  cropHeight.value = cropWidth.value / props.aspectRatio;
 
   try {
+    let prepared = { path: props.source, width: 1, height: 1 };
+    // #ifdef H5
+    prepared = await prepareH5Source(props.source);
+    // #endif
+    // #ifndef H5
     const info = await getImageInfo(props.source);
-    workingSource.value = info.path || props.source;
-    naturalWidth.value = Math.max(1, info.width);
-    naturalHeight.value = Math.max(1, info.height);
-    const aspect = naturalWidth.value / naturalHeight.value;
-    if (aspect >= 1) {
-      baseHeight.value = cropSize.value;
-      baseWidth.value = cropSize.value * aspect;
+    prepared = { path: info.path || props.source, width: info.width, height: info.height };
+    // #endif
+    if (currentInitialization !== initializationId || !props.open) return;
+    workingSource.value = prepared.path;
+    naturalWidth.value = Math.max(1, prepared.width);
+    naturalHeight.value = Math.max(1, prepared.height);
+    const imageAspect = naturalWidth.value / naturalHeight.value;
+    if (imageAspect >= props.aspectRatio) {
+      baseHeight.value = cropHeight.value;
+      baseWidth.value = cropHeight.value * imageAspect;
     } else {
-      baseWidth.value = cropSize.value;
-      baseHeight.value = cropSize.value / aspect;
+      baseWidth.value = cropWidth.value;
+      baseHeight.value = cropWidth.value / imageAspect;
     }
     resetCrop();
     imageReady.value = true;
@@ -98,6 +157,12 @@ watch(
   () => [props.open, props.source] as const,
   ([open, source]) => {
     if (open && source) void initializeCrop();
+    else if (!open) {
+      initializationId += 1;
+      releaseNormalizedSource();
+      workingSource.value = "";
+      imageReady.value = false;
+    }
   },
   { immediate: true },
 );
@@ -166,10 +231,10 @@ const changeZoom = (event: { detail: { value: number | string } }) => {
 const cropCoordinates = () => {
   const displayedWidth = baseWidth.value * scale.value;
   const displayedHeight = baseHeight.value * scale.value;
-  const imageLeft = cropSize.value / 2 + offsetX.value - displayedWidth / 2;
-  const imageTop = cropSize.value / 2 + offsetY.value - displayedHeight / 2;
-  const sourceWidth = cropSize.value / displayedWidth * naturalWidth.value;
-  const sourceHeight = cropSize.value / displayedHeight * naturalHeight.value;
+  const imageLeft = cropWidth.value / 2 + offsetX.value - displayedWidth / 2;
+  const imageTop = cropHeight.value / 2 + offsetY.value - displayedHeight / 2;
+  const sourceWidth = cropWidth.value / displayedWidth * naturalWidth.value;
+  const sourceHeight = cropHeight.value / displayedHeight * naturalHeight.value;
   return {
     x: clamp(-imageLeft / displayedWidth * naturalWidth.value, 0, naturalWidth.value - sourceWidth),
     y: clamp(-imageTop / displayedHeight * naturalHeight.value, 0, naturalHeight.value - sourceHeight),
@@ -180,16 +245,11 @@ const cropCoordinates = () => {
 
 const exportForH5 = async () => {
   // #ifdef H5
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const element = new Image();
-    element.onload = () => resolve(element);
-    element.onerror = reject;
-    element.src = workingSource.value;
-  });
+  const image = await loadHtmlImage(workingSource.value);
   const crop = cropCoordinates();
   const canvas = document.createElement("canvas");
-  canvas.width = OUTPUT_SIZE;
-  canvas.height = OUTPUT_SIZE;
+  canvas.width = props.outputWidth;
+  canvas.height = props.outputHeight;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("canvas-context");
   context.imageSmoothingEnabled = true;
@@ -202,13 +262,19 @@ const exportForH5 = async () => {
     crop.height,
     0,
     0,
-    OUTPUT_SIZE,
-    OUTPUT_SIZE,
+    props.outputWidth,
+    props.outputHeight,
   );
-  return canvas.toDataURL("image/jpeg", 0.88);
+  const blob = await canvasBlob(canvas);
+  return URL.createObjectURL(blob);
   // #endif
   return "";
 };
+
+onBeforeUnmount(() => {
+  initializationId += 1;
+  releaseNormalizedSource();
+});
 
 const exportForMiniProgram = async () => {
   // #ifndef H5
@@ -222,17 +288,17 @@ const exportForMiniProgram = async () => {
     crop.height,
     0,
     0,
-    OUTPUT_SIZE,
-    OUTPUT_SIZE,
+    props.outputWidth,
+    props.outputHeight,
   );
   await new Promise<void>((resolve) => context.draw(false, resolve));
   const temporaryPath = await new Promise<string>((resolve, reject) => {
     uni.canvasToTempFilePath({
       canvasId,
-      width: OUTPUT_SIZE,
-      height: OUTPUT_SIZE,
-      destWidth: OUTPUT_SIZE,
-      destHeight: OUTPUT_SIZE,
+      width: props.outputWidth,
+      height: props.outputHeight,
+      destWidth: props.outputWidth,
+      destHeight: props.outputHeight,
       fileType: "jpg",
       quality: 0.88,
       success: ({ tempFilePath }) => resolve(tempFilePath),
@@ -277,15 +343,15 @@ const confirmCrop = async () => {
     <view class="crop-panel" @tap.stop>
       <view class="crop-panel__header">
         <view>
-          <text class="crop-panel__title">调整图片</text>
-          <text class="crop-panel__subtitle">拖动图片，双指或滑杆缩放</text>
+          <text class="crop-panel__title">{{ title }}</text>
+          <text class="crop-panel__subtitle">{{ subtitle }}</text>
         </view>
         <button class="crop-panel__close" aria-label="关闭" @tap="$emit('close')">×</button>
       </view>
 
       <view
         class="crop-stage"
-        :style="{ width: `${cropSize}px`, height: `${cropSize}px` }"
+        :style="{ width: `${cropWidth}px`, height: `${cropHeight}px` }"
         @touchstart.stop="beginGesture"
         @touchmove.stop.prevent="moveGesture"
         @touchend.stop="endGesture"
@@ -334,8 +400,8 @@ const confirmCrop = async () => {
         :canvas-id="canvasId"
         :id="canvasId"
         class="crop-output-canvas"
-        :width="OUTPUT_SIZE"
-        :height="OUTPUT_SIZE"
+        :width="outputWidth"
+        :height="outputHeight"
       />
     </view>
   </view>
@@ -344,7 +410,7 @@ const confirmCrop = async () => {
 <style scoped lang="scss">
 .crop-layer {
   position: fixed;
-  z-index: 90;
+  z-index: var(--z-image-crop);
   inset: 0;
   display: flex;
   align-items: center;

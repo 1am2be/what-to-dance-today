@@ -1,11 +1,27 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import { onBeforeUnmount, watch } from "vue";
+
+const props = withDefaults(defineProps<{
   open: boolean;
   placement?: "bottom" | "center";
 }>(), {
   placement: "bottom",
 });
 defineEmits<{ close: [] }>();
+
+let registeredOpen = false;
+
+const updateDocumentState = (open: boolean) => {
+  if (typeof document === "undefined" || open === registeredOpen) return;
+  registeredOpen = open;
+  const currentCount = Number(document.body.dataset.idolSheetCount || 0);
+  const nextCount = Math.max(0, currentCount + (open ? 1 : -1));
+  document.body.dataset.idolSheetCount = String(nextCount);
+  document.body.classList.toggle("idol-sheet-open", nextCount > 0);
+};
+
+watch(() => props.open, updateDocumentState, { immediate: true });
+onBeforeUnmount(() => updateDocumentState(false));
 </script>
 
 <template>
@@ -25,7 +41,7 @@ defineEmits<{ close: [] }>();
 <style scoped lang="scss">
 .sheet-layer {
   position: fixed;
-  z-index: 50;
+  z-index: var(--z-bottom-sheet);
   inset: 0;
   display: flex;
   align-items: flex-end;
@@ -48,10 +64,11 @@ defineEmits<{ close: [] }>();
 .sheet {
   position: relative;
   width: 100%;
-  max-height: 92vh;
-  max-height: 92dvh;
+  max-height: calc(100vh - env(safe-area-inset-top));
+  max-height: calc(100dvh - env(safe-area-inset-top));
   padding: 14px 24px calc(28px + env(safe-area-inset-bottom));
   overflow-y: auto;
+  overscroll-behavior: contain;
   color: #ffffff;
   background: rgba(22, 24, 29, 0.76);
   border-top: 1px solid var(--color-line);

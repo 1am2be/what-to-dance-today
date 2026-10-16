@@ -42,7 +42,7 @@ const navigate = (target: TabName) => {
 <style scoped lang="scss">
 .bottom-nav {
   position: fixed;
-  z-index: 20;
+  z-index: var(--z-bottom-nav);
   right: 0;
   bottom: 0;
   left: 0;

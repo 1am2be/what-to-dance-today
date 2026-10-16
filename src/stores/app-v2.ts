@@ -486,6 +486,23 @@ export const useAppStore = defineStore("app-v2", () => {
     persist();
   };
 
+  const setDanceState = (danceId: string, state: Dance["state"]) => {
+    const dance = dances.value.find((item) => item.id === danceId);
+    if (!dance || dance.state === state) return false;
+    const updatedAt = new Date().toISOString();
+    dance.state = state;
+    dance.updatedAt = updatedAt;
+    if (state === "mastered") {
+      dance.reviewRound = 4;
+      dance.nextReviewAt = null;
+    } else {
+      dance.reviewRound = 0;
+      dance.nextReviewAt = addDays(updatedAt, 1);
+    }
+    persist();
+    return true;
+  };
+
   const updateDanceScope = (danceId: string, scopeType: ScopeType, scopeTextValue: string): UpdateScopeResult => {
     const dance = dances.value.find((item) => item.id === danceId);
     const scopeText = scopeTextValue.trim();
@@ -718,6 +735,7 @@ export const useAppStore = defineStore("app-v2", () => {
     initialize,
     addDance,
     recordReview,
+    setDanceState,
     updateDanceScope,
     renameArtist,
     updateArtistImage,
